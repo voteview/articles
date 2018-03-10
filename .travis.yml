@@ -1,0 +1,13 @@
+language: r
+cache: packages
+r:
+  - release
+
+r_binary_packages:
+  - rmarkdown
+  - rjson
+  - knitr
+  - pacman
+
+script:
+  - Rscript compiler.r
