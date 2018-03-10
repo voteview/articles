@@ -7,4 +7,4 @@ install:
   - R -e 'install.packages(c("devtools", "rmarkdown", "rjson", "knitr", "pacman"))'
 
 script:
-  - Rscript ./compiler.r
+  - cd articles && Rscript ./compiler.r
