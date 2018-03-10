@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/voteview/articles.svg?branch=master)](https://travis-ci.org/voteview/articles)
+
 # voteview.com article repository
 
 This repository contains the source documents for the articles, help messages, and blog posts used on voteview.com. We welcome user contributions!
