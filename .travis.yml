@@ -4,6 +4,7 @@ r:
   - release
 
 r_binary_packages:
+  - devtools
   - rmarkdown
   - rjson
   - knitr
