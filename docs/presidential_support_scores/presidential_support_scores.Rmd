@@ -1,11 +1,12 @@
 ---
-title: Title of your article goes here
-author: Author information goes here
-description: A short one to two sentence description which may be used to characterize your article.
-original_date: "2018-01-01" # Set the original date of your contribution in YYYY-MM-DD format here.
+title: Presidential Support Scores
+author: Jeff Lewis
+description: Presents member- and chamber-level presidential support score data.  Shows how scores are calculated.  Provides download links, summary plots, and a comparison to previously published scores.
+original_date: "2017-12-12" # Set the original date of your contribution in YYYY-MM-DD format here.
 date: "`r format(Sys.time(), '%B %d, %Y')`" # Do not modify this
 tags:
-  - blog # Valid tags are: blog, help, data. You may use multiple tags for a post
+  - blog
+  - data  # Valid tags are: blog, help, data. You may use multiple tags for a post
 ---
 
 ```{r echo=FALSE, message=FALSE, error=FALSE}
