@@ -9,5 +9,8 @@ r_binary_packages:
   - knitr
   - pacman
 
+install:
+  - R -e 'devtools::install_deps(dep = TRUE)'
+
 script:
-  - Rscript compiler.r
+  - Rscript ./compiler.r
