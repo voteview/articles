@@ -3,15 +3,8 @@ cache: packages
 r:
   - release
 
-r_binary_packages:
-  - devtools
-  - rmarkdown
-  - rjson
-  - knitr
-  - pacman
-
 install:
-  - R -e 'devtools::install_deps(dep = TRUE)'
+  - R -e 'install.packages("devtools", "rmarkdown", "rjson", "knitr", "pacman")'
 
 script:
   - Rscript ./compiler.r
