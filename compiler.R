@@ -77,7 +77,7 @@ parse_front_matter = function(file_name, folder_name, base_name) {
         "defaulting to \"Voteview Team\"\n")
     yaml_metadata_list$author = "Voteview Team"
   }
-  if(is.null(yaml_metadata_list$original_data)) {
+  if(is.null(yaml_metadata_list$original_date)) {
     cat("\tWARNING: No original date in article metadata,",
         "defaulting to", format(Sys.Date(), "%Y-%m-%d"), "\n")
     yaml_metadata_list$original_date = format(Sys.Date(), "%Y-%m-%d")
@@ -109,6 +109,7 @@ core_loop = function() {
     process_file_name(file_name)
     i = i + 1
   } 
+  cat("Job complete.\n")
 }
 
 core_loop()
