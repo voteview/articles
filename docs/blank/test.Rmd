@@ -13,8 +13,7 @@ tags:
 library(pacman)
 
 # Please list your article's dependencies here, comma separated:
-p_load(dplyr, pscl)
-
+p_load(foreign, cluster)
 ```
 
 ## Information you might want here

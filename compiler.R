@@ -109,6 +109,7 @@ core_loop = function() {
     process_file_name(file_name)
     i = i + 1
   } 
+  cat("Job complete.\n")
 }
 
 core_loop()
