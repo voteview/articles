@@ -6,32 +6,33 @@ original_date: "2017-01-01" # Set the original date of your contribution in YYYY
 date: "`r format(Sys.time(), '%B %d, %Y')`" # Do not modify this
 tags:
   - help # Valid tags are: blog, help, data. You may use multiple tags for a post
+  - data
 ---
 
 ## Clausen Categories
 
-1. *Government Management*: Environmental control; government regulation of business; natural resource management; government ownership of business; government control of the economy; budget balancing; tax policy; interest rates; management of the bureaucracy; etc. 
-2. *Social Welfare*: Social security; public housing; urban renewal; labor regulation; education; urban affairs; employment opportunities and rewards; welfare; medicare; unemployment; minimum wage; legal services; immigration, etc. 
-3. *Agriculture*: Price supports and subsidies; commodity control; acreage limitations; etc. 
-4. *Civil Liberties*: Civil rights; equality; criminal procedure; privacy; guarantees of the Bill of Rights; slavery; Hatch Act; etc. 
-5. *Foreign and Defense Policy*: International policy; foreign aid; aid to international organizations; armament policy; defense procurement; international trade; military pensions; etc. 
-6. *Miscellaneous Policy*: Unclassifiable or unidentifiable votes; all votes concerned with internal organization of Congress; procedural motions.
+1. **Government Management**: Environmental control; government regulation of business; natural resource management; government ownership of business; government control of the economy; budget balancing; tax policy; interest rates; management of the bureaucracy; etc. 
+2. **Social Welfare**: Social security; public housing; urban renewal; labor regulation; education; urban affairs; employment opportunities and rewards; welfare; medicare; unemployment; minimum wage; legal services; immigration, etc. 
+3. **Agriculture**: Price supports and subsidies; commodity control; acreage limitations; etc. 
+4. **Civil Liberties**: Civil rights; equality; criminal procedure; privacy; guarantees of the Bill of Rights; slavery; Hatch Act; etc. 
+5. **Foreign and Defense Policy**: International policy; foreign aid; aid to international organizations; armament policy; defense procurement; international trade; military pensions; etc. 
+6. **Miscellaneous Policy**: Unclassifiable or unidentifiable votes; all votes concerned with internal organization of Congress; procedural motions.
 
 ## Peltzman Categories
 
-1. *Budget General Interest*: Debt limit; budget targets; revenue sharing; unemployment insurance; tax rates; continuing appropriations; etc. 
-2. *Budget Special Interest*: Authorization/appropriations for agencies, departments; public works; subsidized housing; NSF; parks; food stamps; etc. 
-3. *Regulation General Interest*: General tariffs; minimum wage; gasoline rationing; auto emissions; water pollution; etc. 
-4. *Regulation Special Interest*: Union regulations; coal mine regulations; export/import controls; fish and wildlife; etc. 
-5. *Domestic Social Policy*: Abortion; school prayer; busing; criminal code and federal courts; immigration; gun control; Hatch Act; veterans preference; Legal Services Corporation; voting rights; slavery; etc. 
-61. *Defense Policy Budget*: Authorization/appropriations for military; military pensions. 
-71. *Defense Policy Resolutions*: Number of Army divisions; duties of officers; etc.
-62. *Foreign Policy Budget*: Authorization/appropriations for State Department and international organizations; etc. 
-72. *Foreign Policy Resolutions*: Condemn/thank foreign nations; Taiwan relations; disapproval of apartheid; etc. 
-8. *Government Organization*: Setting up new agencies/bureaus/commissions; civil service regulations; government reorganization; Federal Election Commission; constitutional amendments; admission of States; census; etc. 
-9. *Internal Organization*: Election of Speaker; party ratios on committees; creating committees; procedural rules; disputed elections; congressional pay; etc. 
-10. *Indian Affairs*: Indian treaties; appropriations for Indian Department; Indian lands and reservations; etc. 
-11. *D. C.*: All votes dealing with the District of Columbia. 
+1. **Budget General Interest**: Debt limit; budget targets; revenue sharing; unemployment insurance; tax rates; continuing appropriations; etc. 
+2. **Budget Special Interest**: Authorization/appropriations for agencies, departments; public works; subsidized housing; NSF; parks; food stamps; etc. 
+3. **Regulation General Interest**: General tariffs; minimum wage; gasoline rationing; auto emissions; water pollution; etc. 
+4. **Regulation Special Interest**: Union regulations; coal mine regulations; export/import controls; fish and wildlife; etc. 
+5. **Domestic Social Policy**: Abortion; school prayer; busing; criminal code and federal courts; immigration; gun control; Hatch Act; veterans preference; Legal Services Corporation; voting rights; slavery; etc. 
+61. **Defense Policy Budget**: Authorization/appropriations for military; military pensions. 
+71. **Defense Policy Resolutions**: Number of Army divisions; duties of officers; etc.
+62. **Foreign Policy Budget**: Authorization/appropriations for State Department and international organizations; etc. 
+72. **Foreign Policy Resolutions**: Condemn/thank foreign nations; Taiwan relations; disapproval of apartheid; etc. 
+8. **Government Organization**: Setting up new agencies/bureaus/commissions; civil service regulations; government reorganization; Federal Election Commission; constitutional amendments; admission of States; census; etc. 
+9. **Internal Organization**: Election of Speaker; party ratios on committees; creating committees; procedural rules; disputed elections; congressional pay; etc. 
+10. **Indian Affairs**: Indian treaties; appropriations for Indian Department; Indian lands and reservations; etc. 
+11. **D. C.**: All votes dealing with the District of Columbia. 
 
 ## Issue Codes
 
