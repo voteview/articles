@@ -1,5 +1,5 @@
 ---
-title: Data: Member Ideology
+title: Data - Member Ideology
 author: Adam Boche
 description: This article describes the data fields made available in the "Member Ideology" data download
 original_date: "2018-08-01" # Set the original date of your contribution in YYYY-MM-DD format here.

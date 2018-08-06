@@ -1,5 +1,5 @@
 ---
-title: Data: Members' Votes
+title: Data - Members' Votes
 author: Adam Boche
 description: This article describes the data fields made available in the "Members' Votes" data download
 original_date: "2018-08-01" # Set the original date of your contribution in YYYY-MM-DD format here.
