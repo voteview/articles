@@ -12,6 +12,9 @@ tags:
 
 The Member Ideology data export contains biographical and ideological information about members of congress for the chamber(s) and congress(es) that were selected.
 
+Quick Link (all congresses, all chambers, CSV format):
+[https://voteview.com/static/data/out/HSall_members.csv](https://voteview.com/static/data/out/HSall_members.csv)
+
 ### Biographical Fields:
 
 * **congress**: Integer `1+`. The number of the congress that this member's row refers to. e.g. `115` for the 115th Congress (2017-2019)
