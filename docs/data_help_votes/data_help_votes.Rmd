@@ -13,7 +13,7 @@ tags:
 This data contains basic information about how each member in the selected chamber(s) and congress(es) voted on each vote.
 
 Quick Link (all congresses, all chambers, CSV format):
-[https://voteview.com/static/data/out/HSall_votes.csv](https://voteview.com/static/data/out/HSall_votes.csv)
+[https://voteview.com/static/data/out/votes/HSall_votes.csv](https://voteview.com/static/data/out/votes/HSall_votes.csv)
 
 ## Fields:
 

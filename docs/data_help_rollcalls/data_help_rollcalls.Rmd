@@ -13,7 +13,7 @@ tags:
 This data export contains data about each rollcall taken by Congress in the selected chamber(s) and congress(es). Note that this data refers to the overall result and ideological parameters of the vote, not any individual member's positions. For information about individual member positions, please see [Member Votes](/articles/data_help_votes)
 
 Quick Link (all congresses, all chambers, CSV format):
-[https://voteview.com/static/data/out/HSall_rollcalls.csv](https://voteview.com/static/data/out/HSall_rollcalls.csv)
+[https://voteview.com/static/data/out/rollcalls/HSall_rollcalls.csv](https://voteview.com/static/data/out/rollcalls/HSall_rollcalls.csv)
 
 ### Informational Fields:
 
