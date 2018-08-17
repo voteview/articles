@@ -1,6 +1,6 @@
 ---
 title: Data - Member Ideology
-author: Adam Boche
+author: Voteview
 description: This article describes the data fields made available in the "Member Ideology" data download
 original_date: "2018-08-01" # Set the original date of your contribution in YYYY-MM-DD format here.
 date: "`r format(Sys.time(), '%B %d, %Y')`" # Do not modify this
@@ -33,11 +33,11 @@ Quick Link (all congresses, all chambers, CSV format):
 
 ### Ideological Fields:
 
-* **nominate_dim1**: NOMINATE first dimension estimate. 
+* **nominate_dim1**: NOMINATE first dimension estimate.
 * **nominate_dim2**: NOMINATE second dimension estimate.
 * **log_likelihood**: Log-likelihood of the NOMINATE estimate.
 * **geo_mean_probability**: Geometric mean probability of NOMINATE estimate.
-* **number_of_votes**: Number of votes cast by the member during a given congress. 
+* **number_of_votes**: Number of votes cast by the member during a given congress.
 * **conditional**: Integer `0-1`. A `1` indicates NOMINATE was estimated conditionally for a given member. `0` otherwise. Conditional estimation implies that an estimate is provisional and subject to updates when the next full estimation of NOMINATE scores occurs.
 * **nokken_poole_dim1**: Nokken-Poole First dimension estimate.
 * **nokken_poole_dim2**: Nokken-Poole Second dimension estimate.

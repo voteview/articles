@@ -1,6 +1,6 @@
 ---
 title: Data - Congressional Votes
-author: Adam Boche
+author: Voteview
 description: This article describes the data fields made available in the "Congressional Votes" data download
 original_date: "2018-08-01" # Set the original date of your contribution in YYYY-MM-DD format here.
 date: "`r format(Sys.time(), '%B %d, %Y')`" # Do not modify this
@@ -12,8 +12,9 @@ tags:
 
 This data export contains data about each rollcall taken by Congress in the selected chamber(s) and congress(es). Note that this data refers to the overall result and ideological parameters of the vote, not any individual member's positions. For information about individual member positions, please see [Member Votes](/articles/data_help_votes)
 
-Quick Link (all congresses, all chambers, CSV format):
-[https://voteview.com/static/data/out/rollcalls/HSall_rollcalls.csv](https://voteview.com/static/data/out/rollcalls/HSall_rollcalls.csv)
+Quick Links:
+- CSV (simplest) [https://voteview.com/static/data/out/rollcalls/HSall_rollcalls.csv](https://voteview.com/static/data/out/rollcalls/HSall_rollcalls.csv)
+- JSON (has more fields) [https://voteview.com/static/data/out/rollcalls/HSall_rollcalls.json](https://voteview.com/static/data/out/rollcalls/HSall_rollcalls.json)
 
 ### Informational Fields:
 
@@ -22,12 +23,21 @@ Quick Link (all congresses, all chambers, CSV format):
 * **rollnumber**: Integer `1+`. Starts from 1 in the first rollcall of each congress. Excludes quorum calls and vacated votes. This number **does not** match the `clerk_rollnumber` field.
 * **date**: Date on which the rollcall took place.
 * **session**: Integer `1` or `2`. Indicator for which session of the `congress` in which a rollcall occurred.
-* **clerk_rollnumber**: Number assigned by Congress to the rollcall. Includes quorum calls and vacated votes, starts from `1` at the beginning of the *session* (not at the beginning of the *congress*). 
+* **clerk_rollnumber**: Number assigned by Congress to the rollcall. Includes quorum calls and vacated votes, starts from `1` at the beginning of the *session* (not at the beginning of the *congress*).
 * **bill_number**: String. Number of the bill on which rollcall was held.
 * **vote_result**: Official result of rollcall, may not exist for all votes.
 * **vote_desc**: Description fo the rollcall assigned by Congressional staff.
 * **vote_question**: String. Question addressed by the rollcall. e.g. "On Agreeing to the Amendment".
 * **dtl_desc**: Description of the rollcall, collected from historical sources.
+* **congress_url** (JSON only.) URL of congress.gov bill page.
+* **issue_codes**: (JSON only.) Poole and Rosenthal specific issue codes.
+* **crs_policy_area**: (JSON only.) Congressional Research Service policy area.
+* **clausen_codes**: (JSON only.) Clausen (1973) issue-area codes.
+* **peltzman_codes**: (JSON only.) Peltzman (1984) issue-area codes.
+* **source_documents.publication**: (JSON only.) Title of the publications documenting the motion.
+* **source_documents.page_number**: (JSON only.) Page number of the in the publications documenting the motion.
+
+
 
 ### Ideological Fields:
 

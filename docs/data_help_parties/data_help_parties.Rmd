@@ -1,6 +1,6 @@
 ---
 title: Data - Congressional Parties
-author: Adam Boche
+author: Voteview
 description: This article describes the data fields made available in the "Congressional Parties" data download
 original_date: "2018-08-01" # Set the original date of your contribution in YYYY-MM-DD format here.
 date: "`r format(Sys.time(), '%B %d, %Y')`" # Do not modify this
