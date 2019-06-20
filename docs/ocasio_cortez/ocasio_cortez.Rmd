@@ -10,13 +10,12 @@ tags:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-library(tidyverse)
-library(ggplot2)
-library(wnominate)
+library(pacman)
+p_load(tidyverse, ggplot2, wnominate, kableExtra)
 ```
 
 ```{r message=FALSE, warning=FALSE, echo=FALSE}
-library(kableExtra)
+
 h_all <- read_csv("https://voteview.com/static/data/out/members/Hall_members.csv")
 h116frosh_ids <- h_all %>%
                    group_by(icpsr) %>%
