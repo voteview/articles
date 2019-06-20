@@ -6,6 +6,7 @@ original_date: "2019-05-23"
 date: "`r format(Sys.time(), '%B %d, %Y')`"
 tags:
   - blog
+  - data
 ---
 
 ```{r setup, include=FALSE}
