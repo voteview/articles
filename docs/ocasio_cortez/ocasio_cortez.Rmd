@@ -1,0 +1,259 @@
+---
+title: "Why is Alexandria Ocasio-Cortez estimated to be a moderate by NOMINATE?"
+author: "Jeff Lewis"
+description: This article explains why Alexandria Ocasio-Cortez is estimated to be a moderate by NOMINATE as of June 2019
+original_date: "2019-05-23"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+tags:
+  - blog
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(pacman)
+p_load(tidyverse, ggplot2, wnominate, kableExtra)
+```
+
+```{r message=FALSE, warning=FALSE, echo=FALSE}
+
+h_all <- read_csv("https://voteview.com/static/data/out/members/Hall_members.csv")
+h116frosh_ids <- h_all %>%
+                   group_by(icpsr) %>%
+                   summarize(first_cong = min(congress)) %>%
+                   filter(first_cong == 116) %>%
+                   pull(icpsr)
+  
+h116frosh <- h_all %>% 
+    filter(party_code==100, 
+           congress==116, 
+           icpsr %in% h116frosh_ids) %>%
+    mutate(name = sprintf("%s (%s-%s)", bioname, state_abbrev, district_code)) %>%
+    select(name, icpsr, nominate_dim1) %>%
+    arrange(nominate_dim1) %>% 
+    mutate(rank = 1:n()) %>%
+    select(rank, everything()) 
+
+aoc_rank <- h116frosh %>% filter(str_detect(name, "OCASIO")) %>% pull(rank)
+
+num_suff <- function(x) {
+  suff <- c("0"="th",
+            "1"="st",
+            "2"="nd",
+            "3"="rd",
+            "4"="th",
+            "5"="th",
+            "6"="th",
+            "7"="th",
+            "8"="th",
+            "9"="th")
+  last <- str_sub(as.character(x),-1, 1000)
+  paste0(as.character(x), suff[last])
+}
+```
+
+Media coverage of newly elected New York Congresswoman Alexandria Ocasio-Cortez describes her as liberal or even ["ultra-liberal"](https://www.usatoday.com/story/news/politics/2018/06/27/how-alexandria-ocasio-cortez-won-ultra-liberal-pitch-changing-district/738232002/) with good reason.  For example, she supports the green new deal, reparations for slavery, and abolishing ICE --- all positions associated with the left wing of the Democratic caucus.  Curiously, more than 150 roll calls into the 116th Congress, her first-dimension NOMINATE score places her to the right of the majority of freshman Democrats. So, why does NOMINATE think Ocasio-Cortez is a moderate?  This question is made all the more puzzling because NOMINATE ranks Lauren Underwood, Rashida Tlaib, and Ilhan Omar as the three most liberal of the new Democrats in the House which is consistent with the media coverage and public statements of those three members.  In what follows, I identify the roll calls that pull Ocasio-Cortez's NOMINATE location away from the locations of Underwood, Tlaib and Omar and explain why NOMINATE cannot, as yet, conclude that Ocasio-Cortez belongs among the left-wing members of the Democratic caucus.
+
+As shown below, the reason is quite simple.  Because there have been relatively few roll calls taken that divide the left wing of the Democratic caucus from the moderates, there have been few opportunities for freshman liberals to show their stripes.  On the vast majority of votes, members located at Ocasio-Cortez's moderate position and, for example, Omar's liberal position are expected by NOMINATE to vote the same way.  While there are votes on which Ocasio-Cortez joins other strong liberals in voting against the moderates in her party, there are a handful of votes on which Ocasio-Cortez has gone against nearly every other Democrat including Omar, Tlaib and Underwood and sided with (nearly) every Republican.  While Congressional observers understand that votes like Ocasio-Cortez's vote against the rules of the House are protest votes, NOMINATE does not.  Rather, NOMINATE sees these as instances in which Ocasio-Cortez looks like a conservative and it adjusts her location to be more conservative accordingly.  
+
+In those cases in which a large number of liberal members join the Republicans in voting against the Democratic moderates, NOMINATE concludes that the vote did not strongly divide liberals and conservatives.  Consequently, NOMINATE discounts those sorts of votes in determining members' locations.  However, when a member goes alone (or nearly so), in bucking her party, NOMINATE finds that to be highly informative about the member's location (this is how NOMINATE is able to correctly infer that Susan Collins is a moderate).  This is what leads Ocasio-Cortez to be placed in the middle.  
+
+Over time, we expect that the 116th Congress will hold more votes that sharply divide the progressive wing of the Democratic party from the Democratic moderates and Republicans, but until it does, Ocasio-Cortez's willingness to protest alone will lead NOMINATE not to locate her among the Congress's most liberal members.
+
+#### Liberal rankings of freshman Democrats in the 116th House
+
+Here we see that while most of the highest-profile new liberals in the Congress are at the top of NOMINATE's ranking, Ocasio-Cortez is only estimated to be the `r num_suff(as.integer(aoc_rank))` most liberal of the 56 new Democrats.
+
+```{r message=FALSE, warning=FALSE, echo=FALSE}
+h116frosh %>% 
+  select(rank, everything(), -icpsr) %>% 
+  knitr::kable(col.names=c("Rank", "Member", "NOMINATE 1st Dimension")) %>%
+  row_spec(c(1:3, aoc_rank), bold = T, background = "#f6fcba") %>%
+  kableExtra::kable_styling(bootstrap_options = c("striped", "hover"),
+                            font_size = 10, 
+                            full_width = FALSE) 
+
+```
+
+
+```{r message=FALSE, echo=FALSE}
+h116_rollcalls <- read_csv("https://voteview.com/static/data/out/rollcalls/H116_rollcalls.csv")
+h116_votes <- read_csv("https://voteview.com/static/data/out/votes/H116_votes.csv")
+```
+
+#### Votes that moderate Ocasio-Cortez's NOMINATE placement 
+
+The table below shows all of the votes on which Ocasio-Cortez is predicted by NOMINATE to have less than a 40 percent chance of casting a vote on the side that she did.  The roll call numbers shown in the first column are also clickable links to the pages for those votes on Voteview.  The votes are sorted by the probability that NOMINATE attaches to Ocasio-Cortez's vote on each roll call.  These votes tell us just about all we need to know about why Ocasio-Cortez is estimated to be a moderate by NOMINATE.  
+
+For example, on rollcall number 48,  Ocasio-Cortez was the **only** Democrat to vote "nay" and only ten Republicans voted "Yea."  On that vote, liberal members such as Underwood, Tlaib, and Omar are predicted to vote "Yea" with near (certainty).  Even at Ocasio-Cortez's moderate NOMINATE position, NOMINATE only gives her "Nay" vote a 1.8 percent chance.  All of these votes illustrate instances in which Ocasio-Cortez broke from her party including at least some or all of its left-wing.  In order to accommodate these maverick votes, NOMINATE adjusts her position to reflect that she has on several occasions cast votes that are (otherwise) strongly consistent with being a conservative.    
+
+```{r echo=FALSE}
+vt <- c("Y", "Y", "Y", "N", "N", "N", "A", "A", "A")
+h116_votes_frosh_left <- h116_votes %>% 
+    filter(icpsr %in% c(21975, 21950, 21979)) %>%
+    arrange(rollnumber, icpsr) %>%
+    group_by(rollnumber) %>%
+    summarize( votes = paste0(vt[cast_code][order(icpsr)], collapse=""),
+               #probs = paste0(prob, collapse=", "),
+               gmp = exp(sum(log(prob/100))/sum(!is.na(prob))),
+               gmp = ifelse(is.na(gmp), ".", sprintf("%3.1f", gmp*100)))
+```
+
+
+```{r message=FALSE, warning=FALSE, echo=FALSE}
+aoc_low_prob <- h116_votes %>% 
+  filter(icpsr == 21949, prob < 40) %>%
+  left_join(h116_rollcalls, by="rollnumber") %>%
+  left_join(h116_votes_frosh_left) %>%
+  mutate(vote = ifelse(cast_code==1, "Y", "N"),
+         desc = ifelse(is.na(vote_desc), vote_question, sprintf("%s (%s)", vote_desc, vote_question)),
+         rollcall = sprintf('<a href="https://voteview.com/rollcall/RH116%04i">%i</a>', 
+                            rollnumber, rollnumber)) %>%
+  select(rollnumber, rollcall, bill_number, desc, vote, prob, votes, gmp, yea_count, 
+         nay_count) %>%
+  arrange(prob) 
+
+aoc_low_prob %>%
+  select(-rollnumber, -nay_count, -yea_count) %>%
+  knitr::kable(format="html", 
+               escape=FALSE,
+               col.names=c("Rollcall", "Bill", "Description",
+                           "Vote", "Prob.", "Votes", "Avg. Prob.")) %>%
+  kableExtra::column_spec(4,border_left=TRUE) %>%
+  kableExtra::column_spec(6,border_left=TRUE) %>%
+  kableExtra::add_header_above(c(" "=3,"Ocasio-Cortez"=2, "Underwood/Tlaib/Omar"=2)) %>%
+  kableExtra::kable_styling(bootstrap_options = c("striped", "hover"),
+                            font_size = 10, full_width = FALSE)
+
+```
+
+#### Few votes in the 116th House have divided liberal from moderate Democrats (through May 2019)
+
+The following plot shows the probability that NOMINATE assigns to votes cast by Ocasio-Cortez against the average probability that it assigns to votes cast by Omar, Tlaib and Underwood on each rollcall in which Ocasio-Cortez, Omar, Tlaib, and Underwood all voted the same way.  Here we see that on most of these votes, even with her moderate location, Ocasio-Cortez's votes are well predicted by NOMINATE.  Put another way, we find only a small number of votes for which moving Ocasio-Cortez to a similar location to Omar, Tlaib and Underwood would substantially increase the fit of Ocasio-Cortez's votes. Thus, while her go-it-alone protest votes provide a strong impetus for NOMINATE to moderate Ocasio-Cortez's location, the large number of votes on which she agrees with the other liberal Democrats provide little impetus for moving her position leftward. 
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+h116_votes %>% 
+  filter(icpsr == 21949) %>%
+  left_join(h116_rollcalls, by="rollnumber") %>%
+  left_join(h116_votes_frosh_left) %>%
+  filter((votes=="YYY" & cast_code==1) | (votes=="NNN" & cast_code==6)) %>%
+  ggplot(aes(x=prob, y=as.numeric(gmp))) +
+  coord_equal() +
+  xlim(0,100) +
+  ylim(0,100) +
+  geom_abline(intercept=0, slope=1, size=0.25) +
+  theme_minimal() +
+  xlab("Probability of Ocasio-Cortez's vote") + 
+  ylab("Probability of Underwood/Omar/Tlaib's vote") +
+  geom_point(shape=1, alpha=0.5)
+```
+
+### Likelihood of Ocasio-Cortez's votes by DW-NOMINATE position
+
+```{r echo=FALSE}
+places <- expand.grid(seq(-1,1,length=300), seq(-1,1,length=300))
+places <- places[places[,1]^2 + places[,2]^2 <= 1, ]
+places <- rbind(places, c(-.193, -.981))
+
+aoc_vts <- h116_votes %>% 
+  filter(icpsr == 21949, cast_code %in% c(1,6)) %>%
+  left_join(h116_rollcalls, by="rollnumber") %>%
+  filter(!(nominate_spread_1 == 0 & nominate_spread_2 == 0)) %>%
+  mutate(yea_1 = nominate_mid_1 - nominate_spread_1,
+         no_1 = nominate_mid_1 + nominate_spread_1,
+         yea_2 = nominate_mid_2 - nominate_spread_2,
+         no_2 = nominate_mid_2 + nominate_spread_2) %>%
+  do( { pp <- nomprob(yea = cbind(.$yea_1, .$yea_2),
+              nay = cbind(.$no_1, .$no_2),
+              ideal = places,
+              Beta=8.8633,
+              dimweight=c(1, 0.4616^2),
+              normal=1)
+       t((.$cast_code==1)*t(pp) + (.$cast_code==6)*(1-t(pp)))
+       } %>% as.data.frame()) %>%
+  mutate(x1=places[,1], x2=places[,2]) %>%
+  gather(vote, prob, -x1, -x2) %>% 
+  group_by(x1, x2) %>%
+  summarize(gmp = exp(mean(log(prob), na.rm=TRUE)),
+            n = n()) %>%
+  ungroup()
+```
+
+Here we plot the likelihood (represented as the geometric mean probability of her vote choices) of Ocasio-Cortez's votes being cast by a member located anywhere in the DW-NOMINATE space.  Her actual estimated location, the one that maximizes the likelihood of her votes, is represented by the black dot.  Note that the likelihood of her votes falls off rapidly as her location is shifted to the right while she can be moved along the edge of the space to the left with relatively less reduction in fit.  
+
+```{r echo=FALSE}
+aoc_pos <- aoc_vts %>% filter(max(gmp)==gmp)
+
+ggplot(aoc_vts, aes(x=x1, y=x2, color=gmp)) + 
+  scale_color_gradientn(colours = terrain.colors(7)) +
+  geom_point() +
+  geom_point(data=aoc_pos, color='black') +
+  xlab("DW NOMINATE Dimension 1") + 
+  ylab("DW NOMINATE Dimension 2") + 
+  theme_minimal()
+
+``` 
+
+
+
+```{r echo=FALSE}
+knitr::knit_exit()
+```
+
+
+```{r}
+dat <- h116_votes %>%
+         select(rollnumber, icpsr, cast_code) %>%
+         spread(rollnumber, cast_code, fill=0)  %>%
+         arrange(icpsr)
+
+rc_dat <- rollcall(as.matrix(dat[,-1]), 
+                   yea=1, 
+                   nay=6, 
+                   missing=c(7,8,9),
+                   notInLegis=0,
+                   legis.names=dat[,1])
+wnom116 <- wnominate(rc_dat, polarity=c(4,20))
+```
+
+```{r}
+plot(wnom116)
+```
+
+```{r}
+wfrosh116 <-tibble(icpsr=as.numeric(dat[[1]]), wnom1=wnom116$legislator$coord1D) %>%
+   right_join(h116frosh, by="icpsr") %>%
+   arrange(wnom1) %>%
+   mutate(wrank = 1:n())
+wfrosh116
+```
+
+
+```{r}
+phat <- function(wnom, dat) {
+  rc <- wnom$rollcalls
+  rc[is.na(rc$midpoint1D),
+      c("midpoint1D", "midpoint2D", 
+        "spread1D", "spread2D")] <- 0.5
+  mem <- wnom$legislators
+  mem[is.na(mem$coord1D), c("coord1D", "coord2D")] <- 0
+  np <- nomprob(yea=cbind(rc$midpoint1D-rc$spread1D/2, 
+                          rc$midpoint2D-rc$spread2D/2),
+                nay=cbind(rc$midpoint1D+rc$spread1D/2, 
+                          rc$midpoint2D+rc$spread2D/2),
+                ideal=cbind(mem$coord1D, mem$coord2D),
+                Beta=wnom$beta,
+                dimweight=wnom$weights/2,
+                normal=0)
+   np <- np*(dat[,-1]==1) + (1-np)*(dat[,-1]==6) - 10*(dat[,-1]>6) - 10*(dat[,-1]==0)
+   np[np<0] <- NA
+   np[,is.na(wnom$rollcalls$midpoint2D)] <- NA
+   np[is.na(wnom$legislators$coord1D),] <- NA
+   np
+}
+
+p <- phat(wnom116, dat)
+print( range(p, na.rm=T) )
+exp(mean(log(p), na.rm=T))
+print(wnom116$fit[['gmp2D']])
+```
+
