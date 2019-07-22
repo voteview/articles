@@ -1,0 +1,130 @@
+---
+title: "Why are Ocasio-Cortez, Omar, Pressley, and Talib estimated to be moderates by NOMINATE?"
+author: "Jeff Lewis"
+description: This article explains why four clearly progressive first-term Congresswomen are estimated to be moderates by NOMINATE as of July 2019
+original_date: "2019-07-11"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+tags:
+  - blog
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(pacman)
+p_load(tidyverse, ggplot2, wnominate, kableExtra)
+```
+
+```{r message=FALSE, warning=FALSE, echo=FALSE}
+
+h_all <- read_csv("https://voteview.com/static/data/out/members/Hall_members.csv")
+h116frosh_ids <- h_all %>%
+                   group_by(icpsr) %>%
+                   summarize(first_cong = min(congress)) %>%
+                   filter(first_cong == 116) %>%
+                   pull(icpsr)
+  
+h116frosh <- h_all %>% 
+    filter(party_code==100, 
+           congress==116, 
+           icpsr %in% h116frosh_ids) %>%
+    mutate(name = sprintf("%s (%s-%s)", bioname, state_abbrev, district_code)) %>%
+    select(name, icpsr, nominate_dim1) %>%
+    arrange(nominate_dim1) %>% 
+    mutate(rank = 1:n()) %>%
+    select(rank, everything()) 
+
+aoc_rank <- h116frosh %>% filter(str_detect(name, "OCASIO")) %>% pull(rank)
+tlaib_rank <- h116frosh %>% filter(str_detect(name, "TLAIB")) %>% pull(rank)
+underwood_rank <- h116frosh %>% filter(str_detect(name, "UNDERWOOD")) %>% pull(rank)
+pressley_rank <- h116frosh %>% filter(str_detect(name, "PRESSLEY")) %>% pull(rank)
+omar_rank <- h116frosh %>% filter(str_detect(name, "OMAR")) %>% pull(rank)
+
+
+num_suff <- function(x) {
+  suff <- c("0"="th",
+            "1"="st",
+            "2"="nd",
+            "3"="rd",
+            "4"="th",
+            "5"="th",
+            "6"="th",
+            "7"="th",
+            "8"="th",
+            "9"="th")
+  last <- str_sub(as.character(x),-1, 1000)
+  paste0(as.character(x), suff[last])
+}
+```
+
+In a [previous post](https://voteview.com/articles/ocasio_cortez) written last month, I explained why newly elected New York Congresswoman Alexandria Ocasio-Cortez is not estimated by NOMINATE to be among the most liberal members of the Democratic caucus. At that post, I focused on the votes that led NOMINATE to moderate her ideal point and, in particular, to locate Ocasio-Cortez at a much more moderate position that other progressive first termers such as Lauren Underwood, Rashida Tlaib, and Ilhan Omar.  Since that time, new rollcalls taken on funding for the border crisis have pushed Tlaib, Omar, and Ayanna Pressley, who had previously been estimated to be among the most progressive Democrats, towards the location occupied by Ocasio-Cortez.  Interestingly, Lauren Underwood's estimated position has not shifted and remains among the very most liberal Democratic first termers as estimated by NOMINATE.
+
+The logic driving these new placements exactly follows that described in the [previous post](https://voteview.com/articles/ocasio_cortez) and I refer the reader to that post for a more detailed explanation.  Here I will simply highlight those new votes on which Ocasio-Cortez, Omar, Tlaib, and Pressley broke ranks with nearly every other member of Democratic caucus and voted with nearly every Republican.  Those votes are interpreted by NOMINATE as conservative votes and NOMINATE adjusts those members' locations to accommodate those votes accordingly.  Over time, we expect those progressive members' ideal points to drift back towards the left flank of their party as more votes that cleave all of the progressives from the rest of Democratic conference and the Republican conference are taken. 
+
+
+#### Liberal rankings of freshman Democrats in the 116th House
+
+Here we see the first-dimension NOMINATE score ranking of freshman Democrats from most to least liberal as of `r format(Sys.time(), '%B %d, %Y')`. Note that Underwood remains among the most liberal of the new class, but Omar, Pressley, and Tlaib are longer estimated to be among the most progressive as were in the [previous post](https://voteview.com/articles/ocasio_cortez). 
+
+```{r message=FALSE, warning=FALSE, echo=FALSE}
+h116frosh %>% 
+  select(rank, everything(), -icpsr) %>% 
+  knitr::kable(col.names=c("Rank", "Member", "NOMINATE 1st Dimension")) %>%
+  row_spec(c(aoc_rank, omar_rank, pressley_rank, tlaib_rank, underwood_rank), 
+           bold = T, background = "#f6fcba") %>%
+  kableExtra::kable_styling(bootstrap_options = c("striped", "hover"),
+                            font_size = 10, 
+                            full_width = FALSE) 
+```
+
+
+```{r message=FALSE, echo=FALSE}
+h116_rollcalls <- read_csv("https://voteview.com/static/data/out/rollcalls/H116_rollcalls.csv")
+h116_votes <- read_csv("https://voteview.com/static/data/out/votes/H116_votes.csv")
+```
+
+#### Votes that moderate Ocasio-Cortez, Omar, Pressley and Tlaib's NOMINATE placements 
+
+The table below shows all of the votes on which Ocasio-Cortez, Omar, Pressley and Tlaib are predicted by NOMINATE to have less than a 40 percent chance (on average) of casting a vote on the side that they did and on which they all voted the same way.  The table also shows the predicted probability of votes cast by Underwood on those same rollcalls (recall that Underwood is estimated to be second most liberal Democratic freshman). The roll call numbers shown in the first column are also clickable links to the pages for those votes on Voteview.  The votes are sorted by the average probability that NOMINATE attaches to their votes on each roll call. The most important of these votes for determining member's locations is Roll Call 413 for which Ocasio-Cortez, Omar, Tlaib and Pressley were the only Democrats to defect from their Democrat colleagues and vote with all but three of members of the Republican caucus.  
+
+```{r echo=FALSE, warning=FALSE}
+vt <- c("Y", "Y", "Y", "N", "N", "N", "A", "A", "A")
+h116_votes_frosh_left <- h116_votes %>% 
+    filter(icpsr %in% c(21949, 21950, 21955, 21975)) %>%
+    arrange(rollnumber, icpsr) %>%
+    group_by(rollnumber) %>%
+    summarize( votes = paste0(vt[cast_code][order(icpsr)], collapse=""),
+               #probs = paste0(prob, collapse=", "),
+               gmp = exp(sum(log(prob/100))/sum(!is.na(prob))),
+               gmp = ifelse(is.na(gmp), ".", sprintf("%3.1f", gmp*100))) %>%
+    filter(as.numeric(gmp) < 40, (votes=="YYYY" | votes=="NNNN"))
+```
+
+
+```{r message=FALSE, warning=FALSE, echo=FALSE}
+grp_low_prob <- h116_votes %>% 
+  filter(icpsr == 21979) %>%
+  left_join(h116_rollcalls, by="rollnumber") %>%
+  right_join(h116_votes_frosh_left) %>%
+  mutate(vote = ifelse(cast_code==1, "Y", "N"),
+         desc = ifelse(is.na(vote_desc), vote_question, sprintf("%s (%s)", vote_desc, vote_question)),
+         rollcall = sprintf('<a href="https://voteview.com/rollcall/RH116%04i">%i</a>', 
+                            rollnumber, rollnumber)) %>%
+  select(rollnumber, rollcall, bill_number, desc, vote, prob, votes, gmp, yea_count, 
+         nay_count) %>%
+  arrange(prob) 
+
+grp_low_prob %>%
+  select(-rollnumber, -nay_count, -yea_count) %>%
+  knitr::kable(format="html", 
+               escape=FALSE,
+               col.names=c("Rollcall", "Bill", "Description",
+                           "Vote", "Prob.", "Votes", "Avg. Prob.")) %>%
+  kableExtra::column_spec(4,border_left=TRUE) %>%
+  kableExtra::column_spec(6,border_left=TRUE) %>%
+  kableExtra::add_header_above(c(" "=3,"Underwood"=2, "Ocasio-Cortez/Omar/Pressley/Tlaib"=2)) %>%
+  kableExtra::kable_styling(bootstrap_options = c("striped", "hover"),
+                            font_size = 10, full_width = FALSE)
+
+```
+
+To maximize the likelihood of these votes under NOMINATE's spatial voting model, Ocasio-Cortez, Omar, Pressley, and Tlaib's positions are shifted away from Underwood's location and towards the locations of the Republican members.  As described in the previous post, shifting their locations in this way does not substantially reduce the fit of the very large number of votes on which Ocasio-Cortez, Omar, Pressley and Tlaib sided with Underwood, but not moving them would greatly reduce the fit model for those few rollcalls on which they did not (such as Roll Call 413).    
