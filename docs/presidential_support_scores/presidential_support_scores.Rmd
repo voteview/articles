@@ -1,0 +1,280 @@
+---
+title: Presidential Support Scores
+author: Jeff Lewis
+description: Presents member- and chamber-level presidential support score data.  Shows how scores are calculated.  Provides download links, summary plots, and a comparison to previously published scores.
+original_date: "2017-12-12" # Set the original date of your contribution in YYYY-MM-DD format here.
+date: "`r format(Sys.time(), '%B %d, %Y')`" # Do not modify this
+tags:
+  - blog
+  - data  # Valid tags are: blog, help, data. You may use multiple tags for a post
+---
+
+```{r echo=FALSE, message=FALSE, error=FALSE}
+# We use pacman to load and install dependencies.
+library(pacman)
+
+# Please list your article's dependencies here, comma separated:
+p_load(tidyverse, ggplot2)
+```
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Calculating Presidential Support Scores from Voteview
+
+Presidential support scores for individual members of Congress and for each chamber as a whole have been widely employed in the literature.  These scores record the fraction of times that each member (or all members in the case of the aggregate measures) voted to support the president's position across all votes on which the president's position can be inferred.  
+
+Voteview includes the pseudo rollcall voting records for presidents.  Those votes were determined as described by Poole on the legacy voteview.com site:   
+
+>Please note that the House files now contain scores for most Presidents. For Presidents prior to Eisenhower these are based on roll calls
+corresponding to Presidential requests. These roll calls were compiled by an NSF project headed by Elaine Swift (Study No. 3371, Database of Congressional Historical Statistics, 1789-1989). Many of these scores are based upon a small number of roll calls so use them with caution!
+
+How exactly to infer the positions taken by the president on particular votes may vary from source to source as will the calculation of the rate of support, so you should expect that there will be some differences between the scores that are calculated here and than those calculated by, for example, CQ.
+
+For the Senate, the Voteview database only includes the presidents' positions on votes from 1955 forward.  For the House, the presidents' positions are included in the Voteview database back to 1792 (although prior 1900 there are years in which the database includes no positions taken by the president).
+
+Given these roll call "voting" records for the President in each year, we calculate member-level and chamber-level measures of presidential support for every year following the procedure described in George C. Edwards III  "Measuring Presidential Success in Congress: Alternative Approaches." <i>Journal of Politics</i> (1985, 47(2):667-685). 
+
+If you continue scrolling through this page, you will find a plot comparing our support scores to the "overall" scores presented by Edwards for the House.  The scores are within a point or two at the aggregate level in 28 of 31 years for which Edwards reports aggregate presidential support in the House of Representatives.  You will also find summary plots of all of the scores across time for both the House and the Senate.
+
+# Presidential support score data for download
+
+The following csv files are available:
+
+* [presidential_support_summary.csv](presidential_support_summary.csv): Aggregate chamber-year level presidential support.
+
+* [house_presidential_support.csv](house_presidential_support.csv): Member-year level presidential support scores for House members.  
+
+* [senate_presidential_support.csv](senate_presidential_support.csv): Member-year level presidential support scores for House members.  
+
+The member-year level files contain standard Voteview member metadata and 
+identifiers as well as:
+
+* `pres_matches`: Number of times a members vote agreed with the presidents
+
+* `pres_votes`: The number of votes upon which the president took a position
+
+* `pres_there_for`: The number of votes on which the president "voted" that the member also voted (cast a vote yea, nay or paired vote)
+
+* `score`: The support score (`pres_matches`/`pres_votes`).  Following
+Edwards (1985) the score is missing if the member particated in less than one half of the votes on which the president "voted" (`pres_there_for`/`pres_voted` < 0.5).
+
+# How we do it
+
+Here we walk through the code that we use to create the scores.  If you want to alter the code to produce scores using a different formula, you can download the code along will the source for this file [here]{support_scores.Rmd}.  
+
+We begin with a function that calculates the score for a particular chamber and congress number:
+```{r warning=FALSE, message=FALSE}
+
+pres_score <- function(congress=80,chamber="house") {
+  # Load vote and description data for the given congress
+  vote_fn <- sprintf("https://voteview.com/static/data/ord/%s_%03i.csv",chamber,congress)
+  desc_fn <- sprintf("https://voteview.com/static/data/csv/rollcall/rollcall_%s_%03i.csv",
+                     chamber,congress)
+  rc_vote <- read_csv(vote_fn)
+  rc_desc <- read_csv(desc_fn) %>%
+    mutate(year=lubridate::year(date),
+            rollcall=sprintf("V%04i",rollnumber)) %>%
+    select(congress,year,date,rollcall)
+
+  # Reshape vote data long
+  rc_long <- rc_vote %>% 
+    gather(rollcall,vote,starts_with("V"))  %>% 
+    mutate(vote =  plyr::mapvalues(vote,0:9,c(NA,1,1,1,0,0,0,NA,NA,NA)))
+  
+  # Pull out presidential votes
+  rc_pres  <- rc_long %>% 
+    filter(statecode==99 & !is.na(vote)) %>%
+    mutate(pres_vote=vote) %>%
+    select(congress,rollcall,pres_vote) 
+
+  # Join presidential votes and years to rollcall data
+  rc_long  <- rc_long %>% 
+    left_join(rc_pres) %>%
+    left_join(rc_desc)
+
+  # Make scores
+  score <- rc_long %>% 
+    group_by(congress,year,icpsr,statecode,district,state,party,occupancy,means,name) %>%
+    summarize(pres_matches = sum(vote==pres_vote,na.rm=T),
+            pres_votes = sum(!is.na(pres_vote)),
+            pres_there_for = sum(!is.na(pres_vote) & !is.na(vote)),
+            score = round(100*ifelse(2*pres_there_for >= pres_votes,
+                                     pres_matches/pres_votes, NA),1))
+  list(score=score)
+}
+```
+
+We then calculate the scores across all Congresses and chambers, starting with the the House:
+
+```{r warning=FALSE,message=FALSE,eval=FALSE}
+support_scores <- pres_score(1)
+write.csv(support_scores$score,file="house_presidential_support.csv",row.names=F)
+
+for (cng in 2:114) {
+  support_scores <- pres_score(cng)
+  write.table(support_scores$score,file="house_presidential_support.csv",append=T,row.names=F,sep=",",col.names=F)
+}
+```
+
+and then the Senate:
+
+```{r warning=FALSE,message=FALSE,eval=FALSE}
+support_scores <- pres_score(1,"senate")
+write.csv(support_scores$score,file="senate_presidential_support.csv")
+
+for (cng in 2:114) {
+  support_scores <- pres_score(cng,"senate")
+  write.table(support_scores$score,file="senate_presidential_support.csv",append=T,row.names=F,sep=",",col.names=F)
+}
+```
+
+# Aggregating by year
+
+Here we calculate the average approval scores by year.  One thing to note is that in some cases there are votes from two different Congresses taken in the same year.  For the individual scores, we have created a distinct score for every Congress-year so that it is possible to aggregate to either the year or the Congress level.  For the annual summary, we aggregate to the year level and so in some cases the annual rate combines votes taken in two different Congresses.
+
+Here we calculate the summary for the Senate:
+```{r message=F}
+summary_senate <- read_csv("senate_presidential_support.csv")  %>%
+      filter(2*pres_there_for >= pres_votes) %>%
+      group_by(icpsr,year) %>%
+      summarize(pres_matches=sum(pres_matches),
+                pres_votes=sum(pres_votes),
+                pres_there_for=sum(pres_there_for)) %>%
+      group_by(year) %>%
+      summarize(pres_matches=mean(pres_matches),
+                pres_votes=mean(pres_votes),
+                pres_there_for=mean(pres_there_for)) %>%
+      ungroup()  %>%
+      mutate(score=round(100*pres_matches/pres_votes,1),
+             chamber="senate") %>%
+      select(chamber,year,score) %>%
+      filter(!is.nan(score)) 
+```
+
+Now we calculate those summaries for the House:
+```{r message=F}
+summary_house <- read_csv("house_presidential_support.csv",
+                           col_types = cols(congress = col_integer(),
+                                       year = col_integer(),
+                                       icpsr = col_integer(),
+                                       statecode = col_integer(),
+                                       district = col_integer(),
+                                       state = col_character(),
+                                       party = col_integer(),
+                                       occupancy = col_integer(),
+                                       means = col_integer(),
+                                       name = col_character(),
+                                       pres_matches = col_integer(),
+                                       pres_votes = col_integer(),
+                                       pres_there_for = col_integer(),
+                                       score = col_double()))
+summary_house <- summary_house %>%
+      filter(2*pres_there_for >= pres_votes) %>%
+      group_by(icpsr,year) %>%
+      summarize(pres_matches=sum(pres_matches),
+                pres_votes=sum(pres_votes),
+                pres_there_for=sum(pres_there_for)) %>%
+      group_by(year) %>%
+      summarize(pres_matches=mean(pres_matches),
+                pres_votes=mean(pres_votes),
+                pres_there_for=mean(pres_there_for)) %>%
+      ungroup()  %>%
+      mutate(score=round(100*pres_matches/pres_votes,1),
+             chamber="house") %>%  
+      select(chamber,year,score) %>%
+      filter(!is.nan(score)) 
+  
+write.csv(rbind(summary_house,summary_senate),
+          file="presidential_support_summary.csv",
+          row.names=F)
+```
+
+# Comparing Voteview-based scores to those presented in Edwards (1985)
+
+We begin by loading data from Edwards (1985), Table 2 as well as the aggregate scores that we just created and merging those two datasets.
+
+```{r message=FALSE}
+agg_support <- read_csv("presidential_support_summary.csv") %>%
+   filter(chamber=="house")
+edwards <- read_csv("edwards_1985_support_scores.csv")
+agg_support <- agg_support %>% left_join(edwards)
+```
+
+We can then plot our chamber-level scores against those reported by Edwards:
+
+```{r echo=FALSE, warning=FALSE}
+gg <- ggplot(data.frame(Voteview=agg_support$score,
+                        Year = ifelse(abs(agg_support$score-
+                                          agg_support$overall)>2,
+                                      agg_support$year,
+                                      NA),
+                        Edwards = agg_support$overall), 
+             aes(x=Voteview,y=Edwards,label=Year)) +
+      geom_point() + 
+      geom_abline(slope=1,intercept=0) + 
+      geom_abline(slope=1,intercept=1,lty=3) + 
+      geom_abline(slope=1,intercept=-1,lty=3) + 
+      geom_label(nudge_y=2) + 
+      ggtitle("Presidential Support Scores, US House, 1953-1983") +
+      xlim(40,70) + ylim(40,70) + 
+      coord_equal()
+#gg <- plotly::ggplotly(gg)
+print( gg )
+```
+
+Across the 31 years for which Edwards reports scores, there are only three years in which the difference between what Edwards reports and what we compute based on the Voteview data is greater than 2 percentage points.  Those years are 1965, 1975, and 1978.  We have not uncovered the source of these three larger discrepancies.
+
+The line plot below show the average level of presidential support in the House over the entire history of the chamber.  Edwards' scores overlayed in blue for comparison in the period for which he reports them. As seen in the previous plot, the only major discrepancy between the two series occurs in 1965.
+
+```{r echo=F}
+gg <- ggplot(agg_support %>% filter(!is.na(score)),
+             aes(x=year,y=score)) + 
+         geom_line(color='#3366AA') +
+         geom_line(aes(y=overall),color="red",na.rm=T) +
+         ylab("Average presidential support score") + 
+         ggtitle("Average presidential support scores, House")
+gg
+```
+
+# Support scores over time
+
+Finally, we plot the presidential support scores for all House members and all Senate members across all years. Each point represents a member in a particular year. The points are "jittered" by small random shocks so that clusters of members with the same score in the same year can be distinguished.  
+
+## House of Representatives
+
+Prior to 1950, the number of votes upon which the scores are based are relatively small and the number of distinct scores is small with large numbers of members generally piling up at each possible value.
+
+```{r echo=F}
+support <- read.csv("house_presidential_support.csv")
+gg <- ggplot(support,
+             aes(x=year,y=score)) +
+             geom_point(size=0.2, col='gray',alpha=0.4,na.rm=T,
+                        position=position_jitter(width=1/3,height=1)) + 
+             geom_line(data=subset(agg_support,!is.na(score)),
+                       aes(x=year,y=score),col="#3366AA",na.rm=T) + 
+             ggtitle("Presidential support scores, House")
+gg
+```
+
+## Senate
+
+Note that at the moment the database does not include the presidents' positions on roll calls taken in the Senate prior to 1955.
+
+```{r echo=F,message=F}
+support_sen <- read_csv("senate_presidential_support.csv") %>%
+                 mutate(score=as.numeric(score))
+agg_support_sen <- read_csv("presidential_support_summary.csv") %>%
+                 filter(chamber=="senate")
+gg <- ggplot(support_sen,
+             aes(x=year,y=score)) +
+             geom_point(size=0.2, col='gray',alpha=0.4,na.rm=T,
+                         position=position_jitter(width=1/3,height=1)) +
+             geom_line(data=subset(agg_support_sen,!is.na(score)),
+                       aes(x=year,y=score),col="#3366AA",na.rm=T) + 
+             ggtitle("Presidential support scores, Senate")
+gg
+```
+

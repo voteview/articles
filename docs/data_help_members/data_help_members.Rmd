@@ -1,0 +1,57 @@
+---
+title: Data - Member Ideology
+author: Voteview
+description: This article describes the data fields made available in the "Member Ideology" data download
+original_date: "2018-08-01" # Set the original date of your contribution in YYYY-MM-DD format here.
+date: "`r format(Sys.time(), '%B %d, %Y')`" # Do not modify this
+tags:
+  - help # Valid tags are: blog, help, data. You may use multiple tags for a post
+---
+
+## Member Ideology Data
+
+The Member Ideology data export contains biographical and ideological information about members of congress for the chamber(s) and congress(es) that were selected.
+
+Quick Link (all congresses, all chambers, CSV format):
+[https://voteview.com/static/data/out/members/HSall_members.csv](https://voteview.com/static/data/out/members/HSall_members.csv)
+
+### Biographical Fields:
+
+* **congress**: Integer `1+`. The number of the congress that this member's row refers to. e.g. `115` for the 115th Congress (2017-2019)
+* **chamber**: `House`, `Senate`, or `President`. The chamber in which the member served.
+* **icpsr**: Integer `1-99999`. This is an ID code which identifies the member in question. In general, each member receives a single ICPSR identifier applicable to their entire career. A small number of members have received more than one: this can occur for members who have switched parties; as well as members who subsequently become president. Creating a new identifier allows a new NOMINATE estimate to be produced for separate appearances of a member in different roles.
+* **state_icpsr**: Integer `0-99`. Identifier for the state represented by the member.
+* **district_code**: Integer `0-99`. Identifier for the district that the member represents within their state (e.g. `3` for the Alabama 3rd Congressional District). Senate members are given `district_code` 0. Members who represent historical "at-large" districts are assigned `99`, `98`, or `1` in various circumstances.
+* **state_abbrev**: String. Two-character postal abbreviation for state (e.g. `MO` for Missouri).
+* **party_code**: Integer `1-9999`. Identifying code for the member's party. Please see [documentation for Party Data](/articles/data_help_parties) for more information about which `party_code` identifiers refer to which parties.
+* **occupancy**: Integer `1+`. ICPSR occupancy code. This item is considered legacy or incomplete information and has not been verified. In general, members receive `0` if they are the only occupant, `1` if they are the first occupant, `2` if they are the second occupant, etc.
+* **last_means**: Integer `1-5`. ICPSR Attain-Office Code. This is an indicator that reflects the member's last means of attaining office. This item is considered legacy or incomplete information and has not been verified. Members received `1` if they were elected in a general election, `2` if elected by special election, `3` if directly elected  by a state legislature, and `5` if appointed.
+* **bioname**: String. Name of the member, surname first. For most members, agrees with the Biographical Directory of Congress.
+* **bioguide_id**: String. Member identifier in the Biographical Directory of Congress.
+* **born**: Integer. Year of member's birth.
+* **died**: Integer. Year of member's death.
+
+### Ideological Fields:
+
+* **nominate_dim1**: NOMINATE first dimension estimate.
+* **nominate_dim2**: NOMINATE second dimension estimate.
+* **log_likelihood**: Log-likelihood of the NOMINATE estimate.
+* **geo_mean_probability**: Geometric mean probability of NOMINATE estimate.
+* **number_of_votes**: Number of votes cast by the member during a given congress.
+* **conditional**: Integer `0-1`. A `1` indicates NOMINATE was estimated conditionally for a given member. `0` otherwise. Conditional estimation implies that an estimate is provisional and subject to updates when the next full estimation of NOMINATE scores occurs.
+* **nokken_poole_dim1**: Nokken-Poole First dimension estimate.
+* **nokken_poole_dim2**: Nokken-Poole Second dimension estimate.
+
+### Making use of Ideological Data
+
+We present two main estimates of a legislator's ideology: NOMINATE and Nokken-Poole. NOMINATE estimates assume that members occupy a static ideological position across the course of their career. Nokken-Poole estimates assume that each congress is completely separate for the purposes of estimating a member's ideology. We expect that most users of our data will primarily make use of the `nominate_dim1` field, which reports the first dimension (often interpreted as economic liberalism-conservatism) of members as estimated by NOMINATE.
+
+For more information on these scores, please see discussion in our journal article:
+
+Boche, Adam, Jeffrey B. Lewis, Aaron Rudkin, and Luke Sonnet. "The new Voteview.com: preserving and continuing Keith Poole’s infrastructure for scholars, students and observers of Congress". *Public Choice* 176(1-2). Available online: [https://link.springer.com/article/10.1007/s11127-018-0546-0](https://link.springer.com/article/10.1007/s11127-018-0546-0)
+
+## Citation
+
+To cite this data, please use the following citation:
+
+Lewis, Jeffrey B., Keith Poole, Howard Rosenthal, Adam Boche, Aaron Rudkin, and Luke Sonnet (`r format(Sys.time(), '%Y')`). *Voteview: Congressional Roll-Call Votes Database.* [https://voteview.com/](https://voteview.com/)

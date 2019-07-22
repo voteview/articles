@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/voteview/articles.svg?branch=master)](https://travis-ci.org/voteview/articles)
+
 # voteview.com article repository
 
 This repository contains the source documents for the articles, help messages, and blog posts used on voteview.com. We welcome user contributions!
@@ -7,7 +9,7 @@ This repository contains the source documents for the articles, help messages, a
 To contribute, follow these simple steps:
 
 1. Fork our repository or clone the "example" branch.
-2. Rename the `articles/blank` folder to a short stub name suitable for your contribution.
+2. Rename the `docs/blank` folder to a short stub name suitable for your contribution.
 3. Inside, rename `blank.Rmd` to match the folder name, and use it as a template for your article.
 4. Open `article.Rproj` and run `compiler.R` to verify your article compiles correctly.
 5. Open a pull request merging your local branch into `voteview/articles/master`

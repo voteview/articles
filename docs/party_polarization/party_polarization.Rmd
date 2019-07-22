@@ -1,0 +1,217 @@
+---
+title: Polarization in Congress
+author: Jeff Lewis
+description: Provides updated versions the classic Voteview plots of party mean DW-NOMINATE scores of overtime.  Figures and the underlying data are available for download. 
+original_date: "2018-02-01" # Set the original date of your contribution in YYYY-MM-DD format here.
+date: "`r format(Sys.time(), '%B %d, %Y')`" # Do not modify this
+tags:
+  - blog # Valid tags are: blog, help, data. You may use multiple tags for a post
+  - data
+---
+
+```{r echo=FALSE, message=FALSE, error=FALSE}
+# We use pacman to load and install dependencies.
+library(pacman)
+
+# Please list your article's dependencies here, comma separated:
+p_load(tidyverse, ggplot2, ggrepel)
+```
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Here we create the polarization data and key graphics the Keith shows and describes in greater detail [here
+](https://legacy.voteview.com/political_polarization_2015.htm).  You can download the `Rmarkdown` code that produces this file and all of the data sets and graphics presented [here](party_polarization.Rmd).
+
+This polarization data set includes the following fields (again following Keith):
+
+```
+ 0.  Chamber
+ 1.  Congress Number
+ 2.  First Year of the Congress
+ 3.  Difference in Party Means - first dimension
+ 4.  Proportion Moderates
+ 5.  Proportion of moderate Democrats (-0.25 to +0.25)
+ 6.  Proportion of moderate Republicans (-0.25 to +0.25)
+ 7.  Overlap
+ 8.  Chamber Mean - first dimension
+ 9.  Chamber Mean - second dimension
+10.  Democratic Party Mean - first dimension
+11.  Democratic Party Mean - second dimension
+12.  Republican Party Mean - first dimension
+13.  Republican Party Mean - second dimension
+14.  Northern Republican Mean - first dimension
+15.  Northern Republican Mean - second dimension
+16.  Southern Republican Mean - first dimension
+17.  Southern Republican Mean - second dimension
+18.  Northern Democrat Mean - first dimension
+19.  Northern Democrat Mean - second dimension
+20.  Southern Democrat Mean - first dimension
+21.  Southern Democrat Mean - second dimension
+```
+
+We begin by loading the data current nominate data from Voteview.com:
+```{r message=FALSE}
+nom_dat <- read_csv("https://voteview.com/static/data/out/members/HSall_members.csv")
+```
+
+To calculate the mean location of the Northern and Southern Democratic and Republican delegations, we
+follow *Congressional Quarterly* in defining the "Southern states" as the 11 states of the Confederacy plus Oklahoma and Kentucky.  Note also the Democrats and Republicans are ICPSR party codes 100 and 200 respectively.
+
+Here is the `R` code that transforms the member-year NOMINATE data into the chamber-year data on polarization:
+ 
+```{r}
+south <- c(40:49,51,53)
+polar_dat <- nom_dat %>% 
+    filter(congress>45 & 
+           chamber != "President") %>%
+    mutate( 
+      year = 2*(congress-1) + 1789,
+    ) %>%
+    group_by(chamber,congress,year) %>% 
+    summarize(
+      party.mean.diff.d1 = mean(nominate_dim1[party_code==200],na.rm=T) - 
+                           mean(nominate_dim1[party_code==100],na.rm=T),
+      prop.moderate.d1 = mean(abs(nominate_dim1)<0.25,na.rm=T),
+      prop.moderate.dem.d1 = mean(abs(nominate_dim1[party_code==100])<0.25,na.rm=T),
+      prop.moderate.rep.d1 = mean(abs(nominate_dim1[party_code==200])<0.25,na.rm=T),
+      overlap = (sum(nominate_dim1[party_code==200] <
+                       max(nominate_dim1[party_code==100],na.rm=T),na.rm=T)  +
+                 sum(nominate_dim1[party_code==100] >
+                       max(nominate_dim1[party_code==200],na.rm=T),na.rm=T))/
+                 (sum(!is.na(nominate_dim1[party_code==100]))+
+                  sum(!is.na(nominate_dim1[party_code==200]))),
+      chamber.mean.d1 = mean(nominate_dim1,na.rm=T),
+      chamber.mean.d2 = mean(nominate_dim2,na.rm=T),
+      dem.mean.d1 = mean(nominate_dim1[party_code==100],na.rm=T),
+      dem.mean.d2 = mean(nominate_dim2[party_code==100],na.rm=T),
+      rep.mean.d1 = mean(nominate_dim1[party_code==200],na.rm=T),
+      rep.mean.d2 = mean(nominate_dim2[party_code==200],na.rm=T),
+      north.rep.mean.d1 = mean(nominate_dim1[party_code==200 & 
+                                             !(state_icpsr %in% south)],na.rm=T),    
+      north.rep.mean.d2 = mean(nominate_dim2[party_code==200 & 
+                                             !(state_icpsr %in% south)],na.rm=T),    
+      south.rep.mean.d1 = mean(nominate_dim1[party_code==200 & 
+                                              (state_icpsr %in% south)],na.rm=T),    
+      south.rep.mean.d2 = mean(nominate_dim2[party_code==200 & 
+                                             (state_icpsr %in% south)],na.rm=T),    
+      north.dem.mean.d1 = mean(nominate_dim1[party_code==100 & 
+                                              !(state_icpsr %in% south)],na.rm=T),    
+      north.dem.mean.d2 = mean(nominate_dim2[party_code==100 & 
+                                              !(state_icpsr %in% south)],na.rm=T),    
+      south.dem.mean.d1 = mean(nominate_dim1[party_code==100 & 
+                                              (state_icpsr %in% south)],na.rm=T),    
+      south.dem.mean.d2 = mean(nominate_dim2[party_code==100 & 
+                                              (state_icpsr %in% south)],na.rm=T),    
+    ) 
+```
+Here are the first few lines of the resulting dataset:
+```{r}
+head(polar_dat)
+write_csv(polar_dat,path="voteview_polarization_data.csv")
+```
+You can download this dataset as a csv [here](voteview_polarization_data.csv).
+
+
+## Party means on the liberal-conservative dimension over time by chamber
+
+Here are up to date versions of the famous party means over time plots for each chamber:
+```{r echo=FALSE}
+polar_dat_long <- polar_dat %>% gather(score,value,-chamber,-year,-congress)
+labels <- c("dem.mean.d1"="DEM",
+            "rep.mean.d1"="REP",
+            "north.dem.mean.d1"="N. DEM",
+            "south.dem.mean.d1"="S. DEM")
+
+polarized_plot <- function(chamb) {
+  pdatl <- polar_dat_long %>% 
+                filter(chamber==chamb,
+                       score %in% c("dem.mean.d1","rep.mean.d1",
+                                    "north.dem.mean.d1","south.dem.mean.d1")) %>%
+                mutate(party=labels[score]) %>%
+                ungroup()
+  
+  gg <- ggplot(data=pdatl,
+               aes(x=year,y=value,group=party,col=party)) +
+               scale_x_continuous(expand = c(0.15, 0), 
+                                 breaks=seq(1880, max(pdatl$year), by=8)) +
+               geom_line() + geom_point(size=0.7) + 
+               xlab("Year") + ylab("Liberal-Conservative") + 
+               geom_text_repel(data=pdatl %>%
+                    filter(year == min(year)),
+                  aes(label = party, color = party),
+                  size = 3,
+                  nudge_x = -8,
+                  point.padding = 0.1,
+                  segment.color = NA,
+                  show.legend = FALSE) +
+              theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+              scale_color_manual(values=c("REP"="#c70828","DEM"="#1372ad",
+                                         "N. DEM"="#6194F4",
+                                         "S. DEM"="#81c4e4"),guide="none") +
+              theme_bw()
+  gg
+}
+```
+
+
+### House
+```{r echo=FALSE}
+gg <- polarized_plot("House")
+ggsave("voteview_house_party_means.png", plot=gg, device="png", 
+       width=7, height=4, dpi=300)
+ggsave("voteview_house_party_means.pdf", plot=gg, device="pdf", 
+       width=7, height=4)
+gg
+```
+
+
+You can download this graphic as a [png](voteview_house_party_means.png) or [pdf](voteview_house_party_means.pdf).
+
+### Senate
+```{r echo=FALSE}
+gg <- polarized_plot("Senate")
+ggsave("voteview_senate_party_means.png", plot=gg, device="png", 
+       width=7, height=4, dpi=300)
+ggsave("voteview_senate_party_means.pdf", plot=gg, device="pdf", 
+       width=7, height=4)
+gg
+
+```
+
+
+You can download this graphic as a [png](voteview_senate_party_means.png) or [pdf](voteview_senate_party_means.pdf).
+
+## Liberal-conservative partisan polarization by chamber
+```{r echo=FALSE}
+gg <- ggplot(polar_dat_long %>% 
+              filter(score == "party.mean.diff.d1"),
+              aes(x=year,y=value,group=chamber,col=chamber)) +
+              scale_x_continuous(expand = c(0.10, 0), breaks=seq(1880,max(polar_dat_long$year),by=8)) +
+              geom_line() + geom_point(size=0.7) + 
+              xlab("Year") + ylab("Distance between party means") + 
+              geom_text_repel(data=polar_dat_long %>%
+                    ungroup() %>%
+                    filter(year == min(year) & score=="party.mean.diff.d1"),
+                  aes(label = chamber, color = chamber),
+                  size = 3,
+                  nudge_x = -10,
+                  point.padding = 0.1,
+                  segment.color = NA,
+                  show.legend = FALSE) +
+              theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+              scale_color_manual(values=c("House"="#c70828","Senate"="#1372ad"),guide="none") +
+              theme_bw() 
+
+ggsave("voteview_party_mean_diff.png", plot=gg, device="png", 
+       width=7, height=4, dpi=300)
+ggsave("voteview_party_mean_diff.pdf", plot=gg, device="pdf", 
+       width=7, height=4)
+gg
+
+```
+
+You can download this graphic as a [png](voteview_party_mean_diff.png) or [pdf](voteview_party_mean_diff.pdf).
+
