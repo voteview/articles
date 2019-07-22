@@ -13,7 +13,7 @@ tags:
 library(pacman)
 
 # Please list your article's dependencies here, comma separated:
-p_load(tidyverse, kableExtra)
+p_load(tidyverse, kableExtra, scales)
 ```
 
 ```{r setup, include=FALSE}
@@ -75,7 +75,7 @@ Pulling out Mr. Biden,
 ```{r}
 biden <- all %>% filter(str_detect(name, "BIDEN"))
 ```
-we find that he voted with the Democrats `{r} sprintf("%3.1f", 100*biden$party_loyalty)` percent of the time making him the `{r} biden$rank` most loyal of the `{r} NROW(all)` Democratic senators with whom he served. 
+we find that he voted with the Democrats `r sprintf("%3.1f", 100*biden$party_loyalty)` percent of the time making him the `r ordinal(iden$rank)` most loyal of the `r NROW(all)` Democratic senators with whom he served. 
 
 Here is a complete table:
 
