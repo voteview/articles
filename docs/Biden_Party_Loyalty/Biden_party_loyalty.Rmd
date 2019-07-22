@@ -1,0 +1,93 @@
+---
+title: "Joe Biden’s Party Loyalty in the Senate"
+author: "Jeff Lewis"
+original_date: "7/22/2019"
+description: This article calculates Joe Biden's career rate of party loyalty in the Senate and compares that rate to the party loyalty rates of all other Democratic senators with whom he served.
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+tags:
+  - blog
+---
+
+```{r echo=FALSE, message=FALSE, error=FALSE}
+# We use pacman to load and install dependencies.
+library(pacman)
+
+# Please list your article's dependencies here, comma separated:
+p_load(tidyverse, kableExtra)
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(kableExtra)
+```
+
+## How often did Joe Biden vote with Democrats?
+
+Here I calculate the lifetime rate at which Joseph Biden sided with the plurality of his party when casting rollcall votes.  For comparison, I also calculate the lifetime rate of party loyalty for all other Democratic senators with whom Biden served over this time in the Congress.   
+
+## Reading the data
+
+I begin by reading in the necessary data.
+
+```{r message=F, warning=F}
+rollcalls <- read_csv("https://voteview.com/static/data/out/rollcalls/Sall_rollcalls.csv")
+members <- read_csv("https://voteview.com/static/data/out/members/Sall_members.csv")
+votes <- read_csv("https://voteview.com/static/data/out/votes/Sall_votes.csv")
+```
+
+## Calculating pary loyalty
+
+I then calculate the rate at which all Democratic senators vote with their party over the their entire careers.  Finally, I filter out just those Senators whose service in the Congress overlapped with Mr. Biden's.  A member is said to have voted with her party if she cast a vote that matched those of the plurality of the Democratic caucus.  Rollcalls on which the party was evenly divided are excluded.      
+
+```{r}
+map_vote <- c("y","y","y", "n", "n", "n", "nv", "nv", "nv")
+all <- votes %>% 
+          left_join(members, by = c("congress", "chamber", "icpsr")) %>%
+          left_join(rollcalls, by=c("congress", "chamber", "rollnumber")) %>%
+          filter(party_code == 100) %>%
+          group_by(congress, rollnumber) %>%
+          mutate(cast_code = map_vote[as.integer(cast_code)], 
+                 party_yea = sum(cast_code=='y'), 
+                 party_no = sum(cast_code=='n'),
+                 party_cast_code = ifelse(party_yea > party_no, 'y', 'n'),
+                 with_party = (party_cast_code == cast_code)) %>%
+          filter(party_yea != party_no) %>%
+          group_by(icpsr) %>%
+          summarize(name = bioname[1],
+                  state_abbrev = state_abbrev[1],
+                  party_loyalty = sum(with_party)/sum(cast_code != 'nv'),
+                  votes_cast = sum(cast_code != 'nv'),
+                  min_congress = min(congress),
+                  max_congress = max(congress)) %>%
+          filter( max_congress >= 93, min_congress <= 111) %>%
+          mutate(rank = rank(-party_loyalty)) %>%
+          ungroup() %>%
+          select(rank, everything(), -icpsr) %>%
+          arrange(desc(party_loyalty))
+
+write_csv(all, path="biden_party_loyalty.csv")
+```
+
+## Tabulating the results
+
+Pulling out Mr. Biden, 
+```{r}
+biden <- all %>% filter(str_detect(name, "BIDEN"))
+```
+we find that he voted with the Democrats `{r} sprintf("%3.1f", 100*biden$party_loyalty)` percent of the time making him the `{r} biden$rank` most loyal of the `{r} NROW(all)` Democratic senators with whom he served. 
+
+Here is a complete table:
+
+```{r}
+all %>%
+  knitr::kable(col.names=c("Rank", "Member", "State", "Party loyalty", "Votes Cast", "First", "Last")) %>%
+  row_spec(c(biden$rank), 
+           bold = T, background = "#f6fcba") %>%
+  kableExtra::kable_styling(bootstrap_options = c("striped", "hover"),
+                            font_size = 10, 
+                            full_width = FALSE) %>%
+  kableExtra::add_header_above(c(" "=5, "Congresses Served"=2))
+```
+
+This table can be download as spreadsheet [here](biden_party_loyalty.csv).
