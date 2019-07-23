@@ -31,9 +31,9 @@ Here I calculate the lifetime rate at which Joseph Biden sided with the pluralit
 I begin by reading in the necessary data.
 
 ```{r message=F, warning=F}
-rollcalls <- read_csv("https://voteview.com/static/data/out/rollcalls/Sall_rollcalls.csv")
-members <- read_csv("https://voteview.com/static/data/out/members/Sall_members.csv")
-votes <- read_csv("https://voteview.com/static/data/out/votes/Sall_votes.csv")
+rollcalls <- read_csv("https://voteview.com/static/data/out/rollcalls/Sall_rollcalls.csv") %>% filter(congress>60)
+members <- read_csv("https://voteview.com/static/data/out/members/Sall_members.csv") %>% filter(congress>60)
+votes <- read_csv("https://voteview.com/static/data/out/votes/Sall_votes.csv") %>% filter(congress>60)
 ```
 
 ## Calculating pary loyalty
