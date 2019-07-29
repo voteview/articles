@@ -1,0 +1,285 @@
+---
+title: "Senate support for presidential executive branch nominees since 1989"
+author: "Jeff Lewis"
+description: Putting Democratic senators support from Trump appointees in recent historical context.
+original_date: "2019-05-23"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+tags:
+  - blog
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(pacman)
+p_load(tidyverse, ggplot2, wnominate, kableExtra)
+```
+
+```{r download data, message=F, warning=F, include=FALSE}
+rc <- read.csv("https://voteview.com/static/data/out/rollcalls/Sall_rollcalls.csv",
+               stringsAsFactors = FALSE) %>%
+        filter(str_detect(bill_number,"^PN"))
+
+votes <- read_csv("https://voteview.com/static/data/out/votes/Sall_votes.csv") %>% 
+            filter(congress>100) 
+
+mems <- read_csv("https://voteview.com/static/data/out/members/Sall_members.csv") %>%
+            filter(congress>100) %>%
+            mutate(party_code = ifelse(icpsr==29147, 100, party_code))  # Make BS a Dem
+```
+
+```{r make dataset, include=FALSE}
+dat <- rc %>%
+        right_join(votes, by=c("congress", "rollnumber","chamber")) %>%
+        left_join(mems, by=c("congress","icpsr","chamber"))
+```
+
+
+## Overview
+
+There has been a good deal of attention given to President Trump's filling of high-level positions within the executive branch.  Many high-level positions have been [left unfilled](https://www.washingtonpost.com/graphics/politics/trump-administration-appointee-tracker/database/?noredirect=on&utm_term=.63487772ed79) for lengthy periods.  Many nominees have been drawn from outside the pool of what have historically been considered [qualified](https://www.nbcnews.com/politics/white-house/heather-nauert-joins-long-list-questionably-qualified-trump-nominees-n945406) candidates. And, there has been strong and consistent [opposition](https://thehill.com/homenews/senate/452822-trump-nominees-meet-fiercest-opposition-from-warren-sanders-gillibrand) among Democratic senators to President Trump's nominees.  Here we place Democatic senators support for President Trump's executive branch nominees in recent historical context by comparing support for his nominees to support for other president's nominees since 1989.
+
+We find that the average level of support among Democratic senators for President Trump's nominees has been lower than support among opposition-party senators for any other recent president.
+Similarly, the fraction of President Trump's nominees that have received a majority of Democratic senators votes is the lowest among opposition parties' senators for a president's nominees since 1989  though Republican senators' support for President Obama's nominees was nearly as low during the first two years of President Obama's second term in office.
+
+Finally, looking at the support for presidential nominees among invidual senators, we find that Senators Kirsten Gillibrand, Bernie Sanders[^2], Elizabeth Warren, Cory Booker, Kamala Harris, Edward Markey, and Jeff Merkley have only supported between 7 to 18 percent of Trump appointees.   No other opposition party senators have supported fewer than 25 percent of any other president's nominees since 1989.
+
+## Analysis
+
+All of the computer code used to generate this analysis can be accessed [here](trump_nominee_confirmations.Rmd).
+
+The plot below shows the overall share of affirmative votes in support of executive branch nominees by congress among senators of the president's party and among opposition party senators since 1989.   As expected, support among presidents' co-partisans is uniformly high over the period. However, support from opposition-party senators has fallen over time reaching its lowest level during the Trump administration.
+
+
+### Overall support of presidential nominations
+
+```{r make overall support by congress, include=FALSE}
+overall_party_support <- dat %>%
+  filter(party_code %in% c(100,200), 
+         vote_question == "On the Nomination",
+         !str_detect(str_to_lower(vote_desc), "judge|justice")) %>%
+  group_by(congress, party_code) %>%
+  summarize( pct_support = sum(cast_code %in% 1:3)/sum(cast_code %in% 1:6) ) %>%
+  spread(party_code, pct_support) %>%
+  ungroup() %>%
+  mutate(pres = c("G. H. W. Bush", "G. H. W. Bush", 
+                  "Clinton", "Clinton", "Clinton", "Clinton",
+                  "G. W. Bush", "G. W. Bush","G. W. Bush", "G. W. Bush",
+                  "Obama", "Obama", "Obama", "Obama",
+                  "Trump", "Trump"),
+         pres_party = c("R","R",
+                        "D", "D", "D", "D",
+                        "R", "R", "R", "R",
+                        "D", "D", "D", "D",
+                        "R", "R")) 
+```
+
+```{r overall support, warning=FALSE, echo=FALSE}
+library(ggplot2)
+library(directlabels)
+
+add_pres_boxes <- function(gg, ymin=0) {
+   gg + 
+    geom_rect(aes(xmin=100.66, xmax=102.33, ymin=ymin, ymax=105), 
+                  fill="#FFF0F0", alpha=0.1, inherit.aes = FALSE) +
+    geom_rect(aes(xmin=102.66, xmax=106.33, ymin=ymin, ymax=105), 
+                  fill="#F2F2FF", alpha=0.1, inherit.aes = FALSE) +
+    geom_rect(aes(xmin=106.66, xmax=110.33, ymin=ymin, ymax=105), 
+                  fill="#FFF2F2", alpha=0.1, inherit.aes = FALSE) +
+    geom_rect(aes(xmin=110.66, xmax=114.33, ymin=ymin, ymax=105), 
+                  fill="#F2F2FF", alpha=0.1, inherit.aes = FALSE) +
+    geom_rect(aes(xmin=114.66, xmax=116.33, ymin=ymin, ymax=105), 
+                  fill="#FFF2F2", alpha=0.05, inherit.aes = FALSE) +
+    geom_text(aes(x=101.5, y=110, label="Bush"), 
+              col="darkgrey", size=3, inherit.aes=FALSE) +
+    geom_text(data=tibble(), aes(x=104.5, y=110, label="Clinton"), 
+              col="darkgrey", size=3, inherit.aes=FALSE) +
+    geom_text(data=tibble(), aes(x=108.5, y=110, label="Bush"), 
+              col="darkgrey", size=3, inherit.aes=FALSE) +
+    geom_text(data=tibble(), aes(x=112.5, y=110, label="Obama"), 
+              col="darkgrey", size=3, inherit.aes=FALSE) +
+    geom_text(data=tibble(), aes(x=115.5, y=110, label="Trump"), 
+              col="darkgrey", size=3, inherit.aes=FALSE)
+}
+
+overall_party_support_long <- overall_party_support %>%
+                        gather(party, support, -congress, -pres_party, -pres) %>%
+                        mutate( party = ifelse(party==100, "D", "R"),
+                                of_pres_party = ifelse(party==pres_party,
+                                                       "  President's party",
+                                                       "  Opposition party"))
+                  
+ggplot(overall_party_support_long, aes(x=congress, y=100*support, 
+                               group=of_pres_party, col=party)) %>%
+  add_pres_boxes(ymin=30) +
+  geom_point(show.legend = FALSE) +
+  geom_line(size=0.15, color="grey") +
+  ylab("Overall percent vote for nominees") + xlab("Congress") +
+  scale_x_continuous(breaks=seq(101, 116, 2), limits=c(100.5,118.35)) +
+  scale_y_continuous(breaks=seq(30,100,10), limits=c(30,112) ) +
+  scale_color_manual(values=c("R"="red","D"="blue")) +
+  geom_dl(aes(label = of_pres_party), 
+          method = list(dl.combine("last.points"), 
+                        cex = 0.8), color="darkgrey") +
+  theme_minimal()
+```
+
+
+### Fraction of president's nominees receiving majority support from each party's caucus
+
+The figure below shows the fraction of each president's nominees in each congress that were supported by a majority of the president's co-partisans and opposition-party senators.  Note that only President Clinton had any nominees who were not supported by a majority of his co-partisan senators.  The fraction of nominees who have received majority support from the opposition-party's senators has varied substainly since 1989 reaching a low as 40 percent in the 115th Congress. 
+
+```{r Calculate fraction of nominees supported, include=FALSE}
+party_supported <- dat %>%
+  filter(party_code %in% c(100,200), 
+         vote_question == "On the Nomination",
+         !str_detect(str_to_lower(vote_desc), "judge|justice")) %>%
+  group_by(congress, party_code, rollnumber) %>%
+  summarize( supported = sum(cast_code %in% 1:3)/sum(cast_code %in% 1:6) > 0.5) %>%
+  group_by(congress, party_code) %>%
+  summarize(supported = mean(supported)) %>%
+  spread(party_code, supported)   %>%
+  ungroup() %>%
+  mutate(pres = c("G. H. W. Bush", "G. H. W. Bush", 
+                  "Clinton", "Clinton", "Clinton", "Clinton",
+                  "G. W. Bush", "G. W. Bush","G. W. Bush", "G. W. Bush",
+                  "Obama", "Obama", "Obama", "Obama",
+                  "Trump", "Trump"),
+         pres_party = c("R","R",
+                        "D", "D", "D", "D",
+                        "R", "R", "R", "R",
+                        "D", "D", "D", "D",
+                        "R", "R")) 
+
+```
+
+
+```{r plot percent of nominees supported, warning=FALSE, echo=FALSE}
+party_supported_long <- party_supported %>%
+                        gather(party, supported, -congress, -pres_party, -pres) %>%
+                        mutate( party = ifelse(party==100, "D", "R"),
+                                of_pres_party = ifelse(party==pres_party,
+                                                       "  President's party",
+                                                       "  Opposition party"))
+                  
+ggplot(party_supported_long, aes(x=congress, y=100*supported, 
+                               group=of_pres_party, col=party)) %>%
+  add_pres_boxes(ymin=30) +
+  geom_point(show.legend = FALSE) +
+  geom_line(size=0.15, color="grey")  +
+  ylab("Percent of nomminees supported") + xlab("Congress") +
+  scale_x_continuous(breaks=seq(101, 116, 2), limits=c(100.5,118.35)) +
+  scale_y_continuous(breaks=seq(30, 100, 10), limits=c(25,112)) +
+  scale_color_manual(values=c("R"="red","D"="blue")) +
+  geom_dl(aes(label = of_pres_party), 
+          method = list(dl.combine("last.points"), 
+                        cex = 0.8), color="darkgrey") +
+  theme_minimal()
+```
+
+### Rates of nominee support by senator and president 
+
+The two tables below show the senators who voted to confirm the nominees of particular presidents at the lowest levels since 1989.  The first table shows the lowest rates among opposition senators.  The second table shows the lowest rates among the presidents co-partisans.
+
+#### Opposition party senators
+
+The table below shows the lowest rates of support for nominees of each president since 1989.  The table shows every senator who supported less the half of any president's nominees.[^1]  Notice how many of these involve Trump nominees and the very low rates of support for Trump nominees among a number of notable current Democratic senators.
+
+```{r rates of nominee opposition by senator, echo=FALSE, warning=FALSE}
+pres <- tibble(congress=101:116,
+               pres = factor(c("G. H. W. Bush", "G. H. W. Bush", 
+                  "Clinton", "Clinton", "Clinton", "Clinton",
+                  "G. W. Bush", "G. W. Bush","G. W. Bush", "G. W. Bush",
+                  "Obama", "Obama", "Obama", "Obama",
+                  "Trump", "Trump"), levels=c("G. H. W. Bush", "Clinton", "G. W. Bush",
+                                              "Obama", "Trump")),
+               pres_party = c("R","R",
+                        "D", "D", "D", "D",
+                        "R", "R", "R", "R",
+                        "D", "D", "D", "D",
+                        "R", "R"))
+mem_support <- dat %>%
+  left_join(pres, by="congress") %>%
+  filter(party_code %in% c(100,200), 
+         vote_question == "On the Nomination",
+         !str_detect(str_to_lower(vote_desc), "judge|justice")) %>%
+  filter( ifelse(party_code==100, "D", "R") != pres_party) %>%
+  group_by(pres, party_code, bioname, state_abbrev, icpsr, party_code) %>%
+  summarize( supported = sum(cast_code %in% 1:3)/sum(cast_code %in% 1:6),
+             n = n()) %>%
+  ungroup() %>%
+  mutate(member = sprintf("%s (%s-%s)", 
+                          bioname, 
+                          ifelse(party_code==100, "D", "R"), 
+                          state_abbrev)) %>%
+  filter(n>10) %>%
+  select(pres, member, party_code, supported) %>%
+  arrange(supported)
+
+knitr::kable(mem_support %>% 
+               filter(supported < 0.50) %>%
+               select(-party_code) %>%
+               mutate(supported = round(100*supported,1)) %>%
+               rename(President=pres,
+                      Senator = member,
+                      "Pct.\\nSupported" = supported) %>%
+               select(Senator, President, `Pct.\\nSupported`)) %>%
+  kableExtra::kable_styling(bootstrap_options = c("striped", "hover"),
+                            font_size = 10, 
+                            full_width = FALSE) 
+```
+
+#### Distribution of opposition senator support
+
+The histogram below shows the distribution of nominee support rates among opposition-party senators by president since 1989.  The red bars contain senators who supported fewer than half of a president's nominees.  The blue bars contain senators who supported more than half of a president's nominees.  Notice that every Democrat supported over 70 percent of President G. H. W. Bush's nominees and no Democrats supported fewer than half of President G. W. Bush's nominees.  In contrast a substantial number of Republican's supported fewer than half of President Obama's nominees.  However, for President Trump, most Democrats have opposed more than half of his nominees and a sizable number have supported fewer of his nominees than has been seen for any opposition-party senator since 1989.  
+
+
+```{r Make distribution of support across senator-presidente combinations, echo=FALSE, warning=FALSE}
+ggplot(mem_support, aes(x=supported*100, fill=supported<=0.5)) +
+    geom_histogram(breaks=seq(0, 100, by=10), show.legend=FALSE) + 
+    facet_wrap(~pres) +
+    theme_minimal() +
+    xlab("Percent of nominees supported")
+```
+
+
+#### Presidents' co-partisan senators
+
+The table below shows the lowest rates of support for the nominees of presidents since 1989 from senators who are the president's co-partisans.  The table shows every co-partisan senator who supported less than 95 percent of a given president's nominees during this period. 
+
+
+```{r echo=FALSE}
+pp_mem_support <- dat %>%
+  left_join(pres, by="congress") %>%
+  filter(party_code %in% c(100,200), 
+         vote_question == "On the Nomination",
+         !str_detect(str_to_lower(vote_desc), "judge|justice")) %>%
+  filter( ifelse(party_code==100, "D", "R") == pres_party) %>%
+  group_by(pres, party_code, bioname, state_abbrev, icpsr, party_code) %>%
+  summarize( supported = sum(cast_code %in% 1:3)/sum(cast_code %in% 1:6),
+             n = n()) %>%
+  ungroup() %>%
+  mutate(member = sprintf("%s (%s-%s)", 
+                          bioname, 
+                          ifelse(party_code==100, "D", "R"), 
+                          state_abbrev)) %>%
+  filter(n>10) %>%
+  select(pres, member, party_code, supported) %>%
+  arrange(supported)
+
+knitr::kable(pp_mem_support %>% 
+               filter(supported < 0.95) %>%
+               select(-party_code) %>%
+               mutate(supported = round(100*supported,1)) %>%
+               rename(President=pres,
+                      Senator = member,
+                      "Pct.\\nSupported" = supported) %>%
+               select(Senator, President, `Pct.\\nSupported`)) %>%
+  kableExtra::kable_styling(bootstrap_options = c("striped", "hover"),
+                            font_size = 10, 
+                            full_width = FALSE) 
+```
+### Notes
+
+[^1]: Among senators casting more than 10 confirmation votes for the given president's nominees. 
+
+[^2]: Though elected as an independent, Senator Sanders is considered to be a Democrat for the purposes of this analysis.
