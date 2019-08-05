@@ -78,8 +78,10 @@ h116frosh %>%
 
 
 ```{r message=FALSE, echo=FALSE, warning=FALSE}
-h116_rollcalls <- read_csv("https://voteview.com/static/data/out/rollcalls/H116_rollcalls.csv")
-h116_votes <- read_csv("https://voteview.com/static/data/out/votes/H116_votes.csv")
+h116_rollcalls <- read_csv("https://voteview.com/static/data/out/rollcalls/H116_rollcalls.csv",
+                           na=c("","NA","N/A"))
+h116_votes <- read_csv("https://voteview.com/static/data/out/votes/H116_votes.csv",
+                       na=c("","NA","N/A"))
 ```
 
 #### Votes that moderate Ocasio-Cortez, Omar, Pressley and Tlaib's NOMINATE placements 
