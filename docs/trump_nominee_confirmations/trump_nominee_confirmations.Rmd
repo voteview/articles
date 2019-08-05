@@ -11,7 +11,7 @@ tags:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(pacman)
-p_load(tidyverse, ggplot2, wnominate, kableExtra, directlabels)
+p_load(ggplot2, wnominate, kableExtra, directlabels, tidyverse)
 ```
 
 ```{r download data, message=F, warning=F, include=FALSE}
