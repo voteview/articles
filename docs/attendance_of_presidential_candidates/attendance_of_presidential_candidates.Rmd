@@ -1,5 +1,5 @@
 ---
-title: "Attendence of Senators and House Members Running for President"
+title: "Attendance of Senators and House Members Running for President"
 author: "Jeff Lewis"
 description: Track the rate of participation in roll call votes of Members of Congress who are running for President in 2020
 original_date: "2019-07-30"
