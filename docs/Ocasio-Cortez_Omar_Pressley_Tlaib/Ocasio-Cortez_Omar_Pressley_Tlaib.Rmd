@@ -63,7 +63,7 @@ The logic driving these new placements exactly follows that described in the [pr
 
 #### Liberal rankings of freshman Democrats in the 116th House
 
-Here we see the first-dimension NOMINATE score ranking of freshman Democrats from most to least liberal as of `r format(Sys.time(), '%B %d, %Y')`. Note that Underwood remains among the most liberal of the new class, but Omar, Pressley, and Tlaib are longer estimated to be among the most progressive as were in the [previous post](https://voteview.com/articles/ocasio_cortez). 
+Here we see the first-dimension NOMINATE score ranking of freshman Democrats from most to least liberal as of `r format(Sys.time(), '%B %d, %Y')`. Note that Underwood remains among the most liberal of the new class, but Omar, Pressley, and Tlaib are longer estimated to be among the most progressive as they were in the [previous post](https://voteview.com/articles/ocasio_cortez). 
 
 ```{r message=FALSE, warning=FALSE, echo=FALSE}
 h116frosh %>% 
@@ -77,7 +77,7 @@ h116frosh %>%
 ```
 
 
-```{r message=FALSE, echo=FALSE}
+```{r message=FALSE, echo=FALSE, warning=FALSE}
 h116_rollcalls <- read_csv("https://voteview.com/static/data/out/rollcalls/H116_rollcalls.csv")
 h116_votes <- read_csv("https://voteview.com/static/data/out/votes/H116_votes.csv")
 ```
