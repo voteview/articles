@@ -77,17 +77,17 @@ overall_party_support <- dat %>%
 library(ggplot2)
 library(directlabels)
 
-add_pres_boxes <- function(gg, ymin=0) {
+add_pres_boxes <- function(gg) {
    gg + 
-    geom_rect(aes(xmin=100.66, xmax=102.33, ymin=ymin, ymax=105), 
+    geom_rect(aes(xmin=100.66, xmax=102.33, ymin=30, ymax=105), 
                   fill="#FFF0F0", alpha=0.1, inherit.aes = FALSE) +
-    geom_rect(aes(xmin=102.66, xmax=106.33, ymin=ymin, ymax=105), 
+    geom_rect(aes(xmin=102.66, xmax=106.33, ymin=30, ymax=105), 
                   fill="#F2F2FF", alpha=0.1, inherit.aes = FALSE) +
-    geom_rect(aes(xmin=106.66, xmax=110.33, ymin=ymin, ymax=105), 
+    geom_rect(aes(xmin=106.66, xmax=110.33, ymin=30, ymax=105), 
                   fill="#FFF2F2", alpha=0.1, inherit.aes = FALSE) +
-    geom_rect(aes(xmin=110.66, xmax=114.33, ymin=ymin, ymax=105), 
+    geom_rect(aes(xmin=110.66, xmax=114.33, ymin=30, ymax=105), 
                   fill="#F2F2FF", alpha=0.1, inherit.aes = FALSE) +
-    geom_rect(aes(xmin=114.66, xmax=116.33, ymin=ymin, ymax=105), 
+    geom_rect(aes(xmin=114.66, xmax=116.33, ymin=30, ymax=105), 
                   fill="#FFF2F2", alpha=0.05, inherit.aes = FALSE) +
     geom_text(aes(x=101.5, y=110, label="Bush"), 
               col="darkgrey", size=3, inherit.aes=FALSE) +
@@ -110,7 +110,7 @@ overall_party_support_long <- overall_party_support %>%
                   
 ggplot(overall_party_support_long, aes(x=congress, y=100*support, 
                                group=of_pres_party, col=party)) %>%
-  add_pres_boxes(ymin=30) +
+  add_pres_boxes() +
   geom_point(show.legend = FALSE) +
   geom_line(size=0.15, color="grey") +
   ylab("Overall percent vote for nominees") + xlab("Congress") +
@@ -163,7 +163,7 @@ party_supported_long <- party_supported %>%
                   
 ggplot(party_supported_long, aes(x=congress, y=100*supported, 
                                group=of_pres_party, col=party)) %>%
-  add_pres_boxes(ymin=30) +
+  add_pres_boxes() +
   geom_point(show.legend = FALSE) +
   geom_line(size=0.15, color="grey")  +
   ylab("Percent of nomminees supported") + xlab("Congress") +
