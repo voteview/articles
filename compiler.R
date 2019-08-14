@@ -16,16 +16,28 @@ process_file_name = function(file_name) {
 
   # Check if we have a current HTML version
   html_version = paste0(folder_name, base_name, ".html")
-  compiled_exists = file.exists(html_version)
+  json_metadata = paste0(folder_name, base_name, ".json")
+  extra_outputs = paste0(folder_name, base_name, "_files")
+  compiled_exists = file.exists(html_version) && file.exists(json_metadata) && file.exists(extra_outputs)
 
   # If we do, check if we need to write another one, or if we're fine with
   # the cache
   need_update = ifelse(compiled_exists,
                        file.mtime(file_name) > file.mtime(html_version),
                        TRUE)
-  
+
+  # Maybe we don't need an update, but we want one because it was requested by the
+  # yaml
+  yaml_metadata_list = rmarkdown::yaml_front_matter(file_name)
+  if(!is.null(yaml_metadata_list$update_until) && yaml_metadata_list$update_until > Sys.Date()) {
+    want_update = 1
+    cat("File is cached, but updated data requested... \n")
+  } else {
+    want_update = 0
+  }
+
   # Do the update if necessary
-  if(need_update) {
+  if(need_update || want_update) {
     cat("\tRendering Rmd to HTML... \n")
     render_file(file_name, folder_name)
     cat("\tWriting JSON metadata... \n")
@@ -34,6 +46,7 @@ process_file_name = function(file_name) {
   } else {
     cat("\tFile not modified, keeping cached version.\n")
   }
+
 }
 
 render_file = function(file_name, folder) {
@@ -106,7 +119,12 @@ core_loop = function() {
     cat(paste0("Processing file ", i, "/", 
                length(rmd_process_list), ": ", 
                file_name, "\n"))
-    process_file_name(file_name)
+    tryCatch({
+      process_file_name(file_name)
+    }, error = function(e) {
+      print(e)
+      cat("Error working on this file.\n")
+    })
     i = i + 1
   } 
   cat("Job complete.\n")
