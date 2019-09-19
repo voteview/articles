@@ -80,7 +80,7 @@ polar_dat <- nom_dat %>%
       overlap = (sum(nominate_dim1[party_code==200] <
                        max(nominate_dim1[party_code==100],na.rm=T),na.rm=T)  +
                  sum(nominate_dim1[party_code==100] >
-                       max(nominate_dim1[party_code==200],na.rm=T),na.rm=T))/
+                       min(nominate_dim1[party_code==200],na.rm=T),na.rm=T))/
                  (sum(!is.na(nominate_dim1[party_code==100]))+
                   sum(!is.na(nominate_dim1[party_code==200]))),
       chamber.mean.d1 = mean(nominate_dim1,na.rm=T),
