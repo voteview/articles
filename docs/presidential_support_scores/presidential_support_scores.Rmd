@@ -113,7 +113,7 @@ We then calculate the scores across all Congresses and chambers, starting with t
 support_scores <- pres_score(1)
 write.csv(support_scores$score,file="house_presidential_support.csv",row.names=F)
 
-for (cng in 2:114) {
+for (cng in 2:115) {
   support_scores <- pres_score(cng)
   write.table(support_scores$score,file="house_presidential_support.csv",append=T,row.names=F,sep=",",col.names=F)
 }
@@ -125,7 +125,7 @@ and then the Senate:
 support_scores <- pres_score(1,"senate")
 write.csv(support_scores$score,file="senate_presidential_support.csv")
 
-for (cng in 2:114) {
+for (cng in 2:115) {
   support_scores <- pres_score(cng,"senate")
   write.table(support_scores$score,file="senate_presidential_support.csv",append=T,row.names=F,sep=",",col.names=F)
 }
