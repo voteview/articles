@@ -26,6 +26,8 @@ process_file_name = function(file_name) {
   
   compiled_exists = file.exists(html_version) && 
     file.exists(json_metadata) && file.exists(extra_outputs)
+  
+  recent_modify = file.mtime(file_name) > file.mtime(html_version)
 
   # Conditions where we need an update:
   # - Compiled files do not exist
@@ -34,26 +36,11 @@ process_file_name = function(file_name) {
   # - Compiled files do exist, but the JSON tells us it's time to recompile
   need_update = ifelse(
     compiled_exists,
-    ifelse(
-      file.mtime(file_name) > file.mtime(html_version),
-      TRUE,
-      needs_recompile
-    ),
+    ifelse(recent_modify, TRUE, needs_recompile),
     TRUE)
 
-  # Maybe we don't need an update, but we want one because it was requested by 
-  # the yaml
-  yaml_metadata_list = rmarkdown::yaml_front_matter(file_name)
-  if(!is.null(yaml_metadata_list$update_until) && 
-     yaml_metadata_list$update_until > Sys.Date()) {
-    want_update = 1
-    cat("File is cached, but updated data requested... \n")
-  } else {
-    want_update = 0
-  }
-
   # Do the update if necessary
-  if(need_update || want_update) {
+  if(need_update) {
     cat("\tRendering Rmd to HTML... \n")
     render_file(file_name, folder_name)
     cat("\tWriting JSON metadata... \n")
@@ -61,6 +48,9 @@ process_file_name = function(file_name) {
     clean_superfluous_libraries(folder_name, base_name)
   } else {
     cat("\tFile not modified, keeping cached version.\n")
+    cat(paste0("\tFiles exist? ", compiled_exists, "\n"))
+    cat(paste0("\tRmd modified? ", recent_modify, "\n"))
+    cat(paste0("\tNeeds recompile (timer)? ", needs_recompile, "\n"))
   }
 
 }
