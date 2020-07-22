@@ -18,18 +18,34 @@ process_file_name = function(file_name) {
   html_version = paste0(folder_name, base_name, ".html")
   json_metadata = paste0(folder_name, base_name, ".json")
   extra_outputs = paste0(folder_name, base_name, "_files")
-  compiled_exists = file.exists(html_version) && file.exists(json_metadata) && file.exists(extra_outputs)
+  if(file.exists(json_metadata)) {
+    needs_recompile = read_expiry_date(json_metadata)
+  } else {
+    needs_recompile = TRUE
+  }
+  
+  compiled_exists = file.exists(html_version) && 
+    file.exists(json_metadata) && file.exists(extra_outputs)
 
-  # If we do, check if we need to write another one, or if we're fine with
-  # the cache
-  need_update = ifelse(compiled_exists,
-                       file.mtime(file_name) > file.mtime(html_version),
-                       TRUE)
+  # Conditions where we need an update:
+  # - Compiled files do not exist
+  # - Compiled files do exist and the Rmd file has changed since the 
+  #   HTML version has changed
+  # - Compiled files do exist, but the JSON tells us it's time to recompile
+  need_update = ifelse(
+    compiled_exists,
+    ifelse(
+      file.mtime(file_name) > file.mtime(html_version),
+      TRUE,
+      needs_recompile
+    ),
+    TRUE)
 
-  # Maybe we don't need an update, but we want one because it was requested by the
-  # yaml
+  # Maybe we don't need an update, but we want one because it was requested by 
+  # the yaml
   yaml_metadata_list = rmarkdown::yaml_front_matter(file_name)
-  if(!is.null(yaml_metadata_list$update_until) && yaml_metadata_list$update_until > Sys.Date()) {
+  if(!is.null(yaml_metadata_list$update_until) && 
+     yaml_metadata_list$update_until > Sys.Date()) {
     want_update = 1
     cat("File is cached, but updated data requested... \n")
   } else {
@@ -95,6 +111,10 @@ parse_front_matter = function(file_name, folder_name, base_name) {
         "defaulting to", format(Sys.Date(), "%Y-%m-%d"), "\n")
     yaml_metadata_list$original_date = format(Sys.Date(), "%Y-%m-%d")
   }
+  if(is.null(yaml_metadata_list$cadence_update)) {
+    yaml_metadata_list$update_delta = 7
+  }
+  update_date = format(Sys.Date() + yaml_metadata_list$update_delta, "%Y-%m-%d")
   
   json_output_list = list(
     title = yaml_metadata_list$title,
@@ -102,11 +122,19 @@ parse_front_matter = function(file_name, folder_name, base_name) {
     description = yaml_metadata_list$description,
     original_date = yaml_metadata_list$original_date,
     date_modified = as.numeric(Sys.time()),
+    recompile_date = update_date,
     tags = yaml_metadata_list$tags
   )
   
   write(rjson::toJSON(json_output_list), 
         paste0(folder_name, base_name, ".json"))
+}
+
+read_expiry_date = function(filename) {
+  json_matter = fromJSON(file = filename)
+  if(!"recompile_date" %in% names(json_matter)) { return(TRUE) }
+     
+  Sys.Date() > json_matter[["recompile_date"]]
 }
 
 core_loop = function() {
