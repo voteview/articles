@@ -4,6 +4,7 @@ author: "Jeff Lewis"
 description: This article explains why Alexandria Ocasio-Cortez is estimated to be a moderate by NOMINATE as of June 2019
 original_date: "2019-05-23"
 date: "`r format(Sys.time(), '%B %d, %Y')`"
+update_delta: 9999
 tags:
   - blog
 ---

@@ -4,6 +4,7 @@ author: Voteview
 description: This article describes the data fields made available in the "Member Ideology" data download
 original_date: "2018-08-01" # Set the original date of your contribution in YYYY-MM-DD format here.
 date: "`r format(Sys.time(), '%B %d, %Y')`" # Do not modify this
+update_delta: 9999
 tags:
   - help # Valid tags are: blog, help, data. You may use multiple tags for a post
 ---

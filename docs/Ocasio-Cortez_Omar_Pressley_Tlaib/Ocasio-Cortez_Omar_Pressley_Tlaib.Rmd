@@ -4,6 +4,7 @@ author: "Jeff Lewis"
 description: This article explains why four clearly progressive first-term Congresswomen are estimated to be moderates by NOMINATE as of July 2019
 original_date: "2019-07-11"
 date: "`r format(Sys.time(), '%B %d, %Y')`"
+update_delta: 9999
 tags:
   - blog
 ---

@@ -4,6 +4,7 @@ author: "Jeff Lewis"
 description: Putting Democratic senators support from Trump appointees in recent historical context.
 original_date: "2019-05-23"
 date: "`r format(Sys.time(), '%B %d, %Y')`"
+update_delta: 31
 tags:
   - blog
 ---

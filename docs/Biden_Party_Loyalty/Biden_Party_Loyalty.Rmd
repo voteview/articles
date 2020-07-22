@@ -4,6 +4,7 @@ author: "Jeff Lewis"
 original_date: "7/22/2019"
 description: This article calculates Joe Biden's career rate of party loyalty in the Senate and compares that rate to the party loyalty rates of all other Democratic senators with whom he served.
 date: "`r format(Sys.time(), '%B %d, %Y')`"
+update_delta: 31
 tags:
   - blog
 ---
