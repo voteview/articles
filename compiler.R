@@ -2,12 +2,22 @@
 library(pacman)
 p_load(rmarkdown, knitr, rjson)
 
+# This is a quick hack for pandoc not working in the MacOS command line.
+if(!rmarkdown::pandoc_available("1.12.3")) {
+  Sys.setenv(
+    RSTUDIO_PANDOC = "/Applications/RStudio.app/Contents/MacOS/pandoc"
+  )
+  if(!rmarkdown::pandoc_available("1.12.3")) {
+    stop("Error: Pandoc not detected in R installation.")
+  }
+}
+
 process_file_name = function(file_name) {
   # String split to get the name of the folder, the name of the file,
   # and the pre-extension name of the file ("base_name")
   folder_chunks = strsplit(file_name, "/")
   stripped_file_name = folder_chunks[[1]][length(folder_chunks[[1]])]
-  base_name = substr(stripped_file_name, 
+  base_name = substr(stripped_file_name,
                      1, (nchar(stripped_file_name)-4))
   folder_name = paste0(
     paste(folder_chunks[[1]][1:(length(folder_chunks[[1]])-1)],
@@ -23,15 +33,15 @@ process_file_name = function(file_name) {
   } else {
     needs_recompile = TRUE
   }
-  
-  compiled_exists = file.exists(html_version) && 
+
+  compiled_exists = file.exists(html_version) &&
     file.exists(json_metadata) && file.exists(extra_outputs)
-  
+
   recent_modify = file.mtime(file_name) > file.mtime(html_version)
 
   # Conditions where we need an update:
   # - Compiled files do not exist
-  # - Compiled files do exist and the Rmd file has changed since the 
+  # - Compiled files do exist and the Rmd file has changed since the
   #   HTML version has changed
   # - Compiled files do exist, but the JSON tells us it's time to recompile
   need_update = ifelse(
@@ -66,7 +76,7 @@ render_file = function(file_name, folder) {
                     output_dir = folder,
                     clean = TRUE,
                     quiet = TRUE)
-  
+
 }
 
 clean_superfluous_libraries = function(folder_name, base_name) {
@@ -79,10 +89,10 @@ clean_superfluous_libraries = function(folder_name, base_name) {
 }
 
 parse_front_matter = function(file_name, folder_name, base_name) {
-  # Write a JSON 
+  # Write a JSON
   yaml_metadata_list = rmarkdown::yaml_front_matter(file_name)
-  
-  # 
+
+  #
   if(is.null(yaml_metadata_list$tag)) {
     cat("\tWARNING: No tags included in article metadata.\n")
   }
@@ -105,7 +115,7 @@ parse_front_matter = function(file_name, folder_name, base_name) {
     yaml_metadata_list$update_delta = 7
   }
   update_date = format(Sys.Date() + yaml_metadata_list$update_delta, "%Y-%m-%d")
-  
+
   json_output_list = list(
     title = yaml_metadata_list$title,
     author = yaml_metadata_list$author,
@@ -115,27 +125,27 @@ parse_front_matter = function(file_name, folder_name, base_name) {
     recompile_date = update_date,
     tags = yaml_metadata_list$tags
   )
-  
-  write(rjson::toJSON(json_output_list), 
+
+  write(rjson::toJSON(json_output_list),
         paste0(folder_name, base_name, ".json"))
 }
 
 read_expiry_date = function(filename) {
   json_matter = fromJSON(file = filename)
   if(!"recompile_date" %in% names(json_matter)) { return(TRUE) }
-     
+
   Sys.Date() > json_matter[["recompile_date"]]
 }
 
 core_loop = function() {
   # Process these
   rmd_process_list = list.files(".", ".Rmd$", recursive = TRUE)
-  
+
   # Loop through the files we wish to process
   i = 1
   for(file_name in rmd_process_list) {
-    cat(paste0("Processing file ", i, "/", 
-               length(rmd_process_list), ": ", 
+    cat(paste0("Processing file ", i, "/",
+               length(rmd_process_list), ": ",
                file_name, "\n"))
     tryCatch({
       process_file_name(file_name)
@@ -144,7 +154,7 @@ core_loop = function() {
       cat("Error working on this file.\n")
     })
     i = i + 1
-  } 
+  }
   cat("Job complete.\n")
 }
 
