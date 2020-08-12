@@ -1,5 +1,10 @@
 # Load our dependencies
-library(pacman)
+result_pacman = require(pacman)
+if(!result_pacman) {
+  # Hardcoded a repo in order to force proceeding.
+  install.packages("pacman", repos = "https://cloud.r-project.org")
+  library(pacman)
+}
 p_load(rmarkdown, knitr, rjson)
 
 # This is a quick hack for pandoc not working in the MacOS command line.
