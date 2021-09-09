@@ -166,7 +166,7 @@ core_loop = function() {
 }
 
 # Parse command line options (if called from Rscript)
-parser <- ArgumentParser()
+parser <- argparse::ArgumentParser()
 parser$add_argument("-f", "--filename", default="", type="character",
                     help="Name of article Rmarkdown file to process (default processes all articles).")
 args <- parser$parse_args()
