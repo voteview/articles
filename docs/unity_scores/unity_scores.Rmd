@@ -5,7 +5,7 @@ original_date: "2018-07-09"
 date: "`r format(Sys.time(), '%B %d, %Y')`" # Do not modify this
 output: html_document
 update_delta: 31
-description: Provides updated versions the classic Voteview calculations of party unity scores. Figures and the underlying data are available for download. 
+description: Provides updated versions of the classic Voteview calculations of party unity scores. Figures and the underlying data are available for download. 
 tags:
   - blog # Valid tags are: blog, help, data. You may use multiple tags for a post
   - data
