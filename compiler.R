@@ -1,3 +1,5 @@
+#!/usr/bin/env Rscript
+
 # Load our dependencies
 result_pacman = require(pacman)
 if(!result_pacman) {
@@ -5,7 +7,7 @@ if(!result_pacman) {
   install.packages("pacman", repos = "https://cloud.r-project.org")
   library(pacman)
 }
-p_load(rmarkdown, knitr, rjson)
+p_load(rmarkdown, knitr, rjson, argparse)
 
 # This is a quick hack for pandoc not working in the MacOS command line.
 if(!rmarkdown::pandoc_available("1.12.3")) {
@@ -41,9 +43,9 @@ process_file_name = function(file_name) {
 
   compiled_exists = file.exists(html_version) &&
     file.exists(json_metadata) && file.exists(extra_outputs)
-
+  
   recent_modify = file.mtime(file_name) > file.mtime(html_version)
-
+  
   # Conditions where we need an update:
   # - Compiled files do not exist
   # - Compiled files do exist and the Rmd file has changed since the
@@ -163,4 +165,19 @@ core_loop = function() {
   cat("Job complete.\n")
 }
 
-core_loop()
+# Parse command line options (if called from Rscript)
+parser <- ArgumentParser()
+parser$add_argument("-f", "--filename", default="", type="character",
+                    help="Name of article Rmarkdown file to process (default processes all articles).")
+args <- parser$parse_args()
+if (args$filename != "") {
+  if (file.exists(args$filename)) {
+    cat(sprintf("Processing %s:\n", args$filename))
+    process_file_name(args$filename)
+  } else {
+    stop(sprintf("Rmarkdown file '%s' not found.\n", args$filename))
+  }
+} else {
+  cat("Processing all articles:\n")
+  core_loop()
+}
