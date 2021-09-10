@@ -60,11 +60,12 @@ We can then use this dataframe to subset the master data down to just the votes 
 ```{r load_data, warning = FALSE, messages = FALSE}
 major_dat <- read_csv("https://voteview.com/static/data/out/votes/HSall_votes.csv", col_types = cols()) %>%
             left_join(member_dat, by = c("congress", "chamber", "icpsr")) %>%
+	    select(congress, chamber, rollnumber, icpsr, bioname, party_code, state_abbrev, district_code, cast_code) %>%
             right_join(big_party, by =  c("congress", "chamber", "party_code"))
+rm(member_dat)
 ```
 
 ## Party unity votes by Congress
-
 ```{r}
 vote_code_map <- c(1,1,1,2,2,2,0,0,0)
 unity_votes <- major_dat %>% 
@@ -104,8 +105,17 @@ poole_unity_by_congress <- read_table("https://legacy.voteview.com/k7ftp/partyun
                                                   "senate_total_votes", "senate_unity_votes",
                                                   "senate_percent_unity", "senate_prop_maj_fwr", 
                                                   "senate_prop_maj_jd"),
-                                      col_types = cols())
-
+                                      col_types = cols(congress = col_integer(),
+				      		       house_total_votes = col_integer(),
+						       house_unity_votes = col_integer(),
+						       house_percent_unity = col_double(),
+                                                       house_prop_maj_fwr = col_double(),
+						       house_prop_maj_jd = col_double(),
+                                                       senate_total_votes = col_integer(),
+						       senate_unity_votes = col_integer(),
+                                                       senate_percent_unity = col_double(),
+						       senate_prop_maj_fwr = col_double(),
+                                                       senate_prop_maj_jd = col_double()))
 ```
 
 We then stack the old and the new scores.
@@ -117,6 +127,9 @@ firstup <- function(x) {
    substr(x, 1, 1) <- toupper(substr(x, 1, 1))
    x
 }
+
+glimpse(unity_votes_by_congress)
+glimpse(poole_unity_by_congress)
 
 ubc <- bind_rows(unity_votes_by_congress %>% mutate(version="New"),
                  poole_unity_by_congress %>% 
@@ -157,7 +170,6 @@ We limit the votes to just those that are party unity votes as determined above.
 
 ```{r}
 party_unity_members <- major_dat %>% 
-          select(congress, chamber, rollnumber, icpsr, bioname, party_code, state_abbrev, district_code, cast_code) %>%
           right_join(unity_votes %>% filter(unity), 
                     by = c("congress", "chamber", "rollnumber")) %>%
           filter(congress > 34) %>%
@@ -173,6 +185,7 @@ party_unity_members <- major_dat %>%
           mutate(party_unity_score = with_party_unity_votes/total_unity_votes )
         
 write_csv(party_unity_members, path="party_unity_by_member.csv")
+rm(major_dat)
 ```
 
 ### Comparing to Poole's estimates
