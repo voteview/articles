@@ -73,7 +73,7 @@ process_file_name = function(file_name, force = FALSE, dryrun = FALSE) {
   } else {
     cat("\tFile not modified, keeping cached version.\n")
     cat(paste0("\tFiles exist? ", compiled_exists, "\n"))
-    cat(paste0("\tRmd modified? ", recent_modify, "\n"))
+    # cat(paste0("\tRmd modified? ", recent_modify, "\n"))
     cat(paste0("\tNeeds recompile (timer)? ", needs_recompile, "\n"))
     cat(paste0("\tForce recompile? ", force, "\n"))
   }
@@ -81,6 +81,10 @@ process_file_name = function(file_name, force = FALSE, dryrun = FALSE) {
 }
 
 render_file = function(file_name, folder) {
+  emergency_break = FALSE
+
+  if(emergency_break) { stop("Emergency break activated, refusing to rebuild file.") }
+
   # Override default output options to use our template
   rmarkdown::render(input = file_name,
                     output_format = "html_document",
@@ -163,7 +167,7 @@ read_expiry_date = function(filename) {
   Sys.Date() > json_matter[["recompile_date"]]
 }
 
-core_loop = function() {
+core_loop = function(dryrun = FALSE) {
   # Process these
   rmd_process_list = list.files(".", ".Rmd$", recursive = TRUE)
 
@@ -177,7 +181,7 @@ core_loop = function() {
                length(rmd_process_list), ": ",
                file_name, "\n"))
     tryCatch({
-      process_file_name(file_name)
+      process_file_name(file_name, dryrun=dryrun)
     }, error = function(e) {
       print(e)
       cat("Error working on this file.\n")
