@@ -67,130 +67,126 @@ Edwards (1985) the score is missing if the member particated in less than one ha
 Here we walk through the code that we use to create the scores.  If you want to alter the code to produce scores using a different formula, you can download the code along will the source for this file [here]{support_scores.Rmd}.  
 
 We begin with a function that calculates the score for a particular chamber and congress number:
+
 ```{r warning=FALSE, message=FALSE}
-
-pres_score <- function(congress=80,chamber="house") {
+pres_score <- function() {
   # Load vote and description data for the given congress
-  vote_fn <- sprintf("https://voteview.com/static/data/ord/%s_%03i.csv",chamber,congress)
-  desc_fn <- sprintf("https://voteview.com/static/data/csv/rollcall/rollcall_%s_%03i.csv",
-                     chamber,congress)
-  rc_vote <- read_csv(vote_fn)
-  rc_desc <- read_csv(desc_fn) %>%
-    mutate(year=lubridate::year(date),
-            rollcall=sprintf("V%04i",rollnumber)) %>%
-    select(congress,year,date,rollcall)
-
-  # Reshape vote data long
-  rc_long <- rc_vote %>% 
-    gather(rollcall,vote,starts_with("V"))  %>% 
-    mutate(vote =  plyr::mapvalues(vote,0:9,c(NA,1,1,1,0,0,0,NA,NA,NA)))
+  vote_dat <-
+    read_csv("https://voteview.com/static/data/out/votes/HSall_votes.csv",
+             col_types = cols()) %>%
+    mutate(vote =  plyr::mapvalues(cast_code,
+                                   0:9,
+                                   c(NA, 1, 1, 1, 0, 0, 0, NA, NA, NA))) %>%
+    select(-prob,-cast_code)
   
-  # Pull out presidential votes
-  rc_pres  <- rc_long %>% 
-    filter(statecode==99 & !is.na(vote)) %>%
-    mutate(pres_vote=vote) %>%
-    select(congress,rollcall,pres_vote) 
-
-  # Join presidential votes and years to rollcall data
-  rc_long  <- rc_long %>% 
-    left_join(rc_pres) %>%
-    left_join(rc_desc)
-
-  # Make scores
-  score <- rc_long %>% 
-    group_by(congress,year,icpsr,statecode,district,state,party,occupancy,means,name) %>%
-    summarize(pres_matches = sum(vote==pres_vote,na.rm=T),
-            pres_votes = sum(!is.na(pres_vote)),
-            pres_there_for = sum(!is.na(pres_vote) & !is.na(vote)),
-            score = round(100*ifelse(2*pres_there_for >= pres_votes,
-                                     pres_matches/pres_votes, NA),1))
-  list(score=score)
+  desc_dat <-
+    read_csv(
+      "https://voteview.com/static/data/out/rollcalls/HSall_rollcalls.csv",
+      guess_max = 1e6,
+      col_types = cols()
+    ) %>%
+    select(date, rollnumber, congress, chamber) %>%
+    mutate(year = lubridate::year(as.Date(date)))
+  
+  members_dat <-
+    read_csv(
+      "https://voteview.com/static/data/out/members/HSall_members.csv",
+      col_types = cols(),
+      guess_max = 1e6
+    ) %>%
+    select(congress,
+           chamber,
+           icpsr,
+           state_abbrev,
+           district_code,
+           bioname,
+           party_code)
+  
+  dat <- vote_dat %>%
+    left_join(desc_dat, by = c("rollnumber", "chamber", "congress")) %>%
+    left_join(members_dat %>% select(-chamber), by = c("icpsr", "congress"))
+  
+  pres_votes <- dat %>%
+    filter(state_abbrev == "USA") %>%
+    rename("pres_vote" = "vote") %>%
+    select(congress, chamber, rollnumber, pres_vote)
+  
+  score <- dat %>%
+    filter(state_abbrev != "USA") %>%
+    left_join(pres_votes, by = c("congress", "chamber", "rollnumber")) %>%
+    group_by(congress,
+             chamber,
+             year,
+             icpsr,
+             bioname,
+             state_abbrev,
+             district_code) %>%
+    summarize(
+      pres_matches = sum(vote == pres_vote, na.rm = T),
+      pres_votes = sum(!is.na(pres_vote)),
+      pres_there_for = sum(!is.na(pres_vote) &
+                             !is.na(vote)),
+      score = round(
+        100 * ifelse(2 * pres_there_for >= pres_votes,
+                     pres_matches / pres_votes, NA),
+        1
+      ),
+      .groups = "drop"
+    )
 }
+
+support_scores <- pres_score()
 ```
 
 We then calculate the scores across all Congresses and chambers, starting with the the House:
 
 ```{r warning=FALSE,message=FALSE,eval=FALSE}
-support_scores <- pres_score(1)
-write.csv(support_scores$score,file="house_presidential_support.csv",row.names=F)
-
-for (cng in 2:115) {
-  support_scores <- pres_score(cng)
-  write.table(support_scores$score,file="house_presidential_support.csv",append=T,row.names=F,sep=",",col.names=F)
-}
+write.csv(support_scores %>%
+            filter(chamber == "House"),
+          file = "house_presidential_support.csv",
+          row.names = F)
 ```
 
 and then the Senate:
 
 ```{r warning=FALSE,message=FALSE,eval=FALSE}
-support_scores <- pres_score(1,"senate")
-write.csv(support_scores$score,file="senate_presidential_support.csv")
-
-for (cng in 2:115) {
-  support_scores <- pres_score(cng,"senate")
-  write.table(support_scores$score,file="senate_presidential_support.csv",append=T,row.names=F,sep=",",col.names=F)
-}
+write.csv(
+  support_scores %>%
+    filter(chamber == "Senate"),
+  file = "senate_presidential_support.csv",
+  row.names = F
+)
 ```
 
 # Aggregating by year
 
-Here we calculate the average approval scores by year.  One thing to note is that in some cases there are votes from two different Congresses taken in the same year.  For the individual scores, we have created a distinct score for every Congress-year so that it is possible to aggregate to either the year or the Congress level.  For the annual summary, we aggregate to the year level and so in some cases the annual rate combines votes taken in two different Congresses.
+Here we calculate the average approval scores by year.  One thing to note is that in some cases there are votes from two different Congresses taken in the same year.  For the individual scores, we have created a distinct score for every Congress-year so that it is possible to aggregate to either the year or the Congress level.  For the annual summary, we aggregate to the year level and so in some cases the annual rate combines votes taken in two different Congresses (and in some cases, loyalty to two different presidents).
 
 Here we calculate the summary for the Senate:
 ```{r message=F}
-summary_senate <- read_csv("senate_presidential_support.csv")  %>%
-      filter(2*pres_there_for >= pres_votes) %>%
-      group_by(icpsr,year) %>%
-      summarize(pres_matches=sum(pres_matches),
-                pres_votes=sum(pres_votes),
-                pres_there_for=sum(pres_there_for)) %>%
-      group_by(year) %>%
-      summarize(pres_matches=mean(pres_matches),
-                pres_votes=mean(pres_votes),
-                pres_there_for=mean(pres_there_for)) %>%
-      ungroup()  %>%
-      mutate(score=round(100*pres_matches/pres_votes,1),
-             chamber="senate") %>%
-      select(chamber,year,score) %>%
-      filter(!is.nan(score)) 
-```
+summary_scores <- support_scores %>%
+  filter(2 * pres_there_for >= pres_votes) %>%
+  group_by(chamber, icpsr, congress, year) %>%
+  summarize(
+    pres_matches = sum(pres_matches),
+    pres_votes = mean(pres_votes),
+    pres_there_for = sum(pres_there_for),
+    .groups = "drop"
+  ) %>%
+  group_by(chamber, year) %>%
+  summarize(
+    pres_matches = mean(pres_matches),
+    pres_votes = mean(pres_votes),
+    pres_there_for = mean(pres_there_for),
+    .groups = "drop"
+  ) %>%
+  ungroup()  %>%
+  mutate(score = round(100 * pres_matches / pres_votes, 1)) %>%
+  select(chamber, year, score) %>%
+  filter(!is.nan(score))
 
-Now we calculate those summaries for the House:
-```{r message=F}
-summary_house <- read_csv("house_presidential_support.csv",
-                           col_types = cols(congress = col_integer(),
-                                       year = col_integer(),
-                                       icpsr = col_integer(),
-                                       statecode = col_integer(),
-                                       district = col_integer(),
-                                       state = col_character(),
-                                       party = col_integer(),
-                                       occupancy = col_integer(),
-                                       means = col_integer(),
-                                       name = col_character(),
-                                       pres_matches = col_integer(),
-                                       pres_votes = col_integer(),
-                                       pres_there_for = col_integer(),
-                                       score = col_double()))
-summary_house <- summary_house %>%
-      filter(2*pres_there_for >= pres_votes) %>%
-      group_by(icpsr,year) %>%
-      summarize(pres_matches=sum(pres_matches),
-                pres_votes=sum(pres_votes),
-                pres_there_for=sum(pres_there_for)) %>%
-      group_by(year) %>%
-      summarize(pres_matches=mean(pres_matches),
-                pres_votes=mean(pres_votes),
-                pres_there_for=mean(pres_there_for)) %>%
-      ungroup()  %>%
-      mutate(score=round(100*pres_matches/pres_votes,1),
-             chamber="house") %>%  
-      select(chamber,year,score) %>%
-      filter(!is.nan(score)) 
-  
-write.csv(rbind(summary_house,summary_senate),
-          file="presidential_support_summary.csv",
-          row.names=F)
+write.csv(summary_scores,
+          file = "presidential_support_summary.csv")
 ```
 
 # Comparing Voteview-based scores to those presented in Edwards (1985)
@@ -198,45 +194,57 @@ write.csv(rbind(summary_house,summary_senate),
 We begin by loading data from Edwards (1985), Table 2 as well as the aggregate scores that we just created and merging those two datasets.
 
 ```{r message=FALSE}
-agg_support <- read_csv("presidential_support_summary.csv") %>%
-   filter(chamber=="house")
-edwards <- read_csv("edwards_1985_support_scores.csv")
-agg_support <- agg_support %>% left_join(edwards)
+edwards <-
+  read_csv("edwards_1985_support_scores.csv", col_types = cols())
+agg_support_house <- summary_scores %>%
+  filter(chamber == "House") %>%
+  left_join(edwards)
 ```
 
 We can then plot our chamber-level scores against those reported by Edwards:
 
 ```{r echo=FALSE, warning=FALSE}
-gg <- ggplot(data.frame(Voteview=agg_support$score,
-                        Year = ifelse(abs(agg_support$score-
-                                          agg_support$overall)>2,
-                                      agg_support$year,
-                                      NA),
-                        Edwards = agg_support$overall), 
-             aes(x=Voteview,y=Edwards,label=Year)) +
-      geom_point() + 
-      geom_abline(slope=1,intercept=0) + 
-      geom_abline(slope=1,intercept=1,lty=3) + 
-      geom_abline(slope=1,intercept=-1,lty=3) + 
-      geom_label(nudge_y=2) + 
-      ggtitle("Presidential Support Scores, US House, 1953-1983") +
-      xlim(40,70) + ylim(40,70) + 
-      coord_equal()
-#gg <- plotly::ggplotly(gg)
-print( gg )
+gg <- ggplot(
+  data.frame(
+    Voteview = agg_support_house$score,
+    Year = ifelse(
+      abs(agg_support_house$score -
+            agg_support_house$overall) > 2,
+      agg_support_house$year,
+      NA
+    ),
+    Edwards = agg_support_house$overall
+  ),
+  aes(x = Voteview, y = Edwards, label = Year)
+) +
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0) +
+  geom_abline(slope = 1,
+              intercept = 2,
+              lty = 3) +
+  geom_abline(slope = 1,
+              intercept = -2,
+              lty = 3) +
+  geom_label(nudge_y = 2) +
+  ggtitle("Presidential Support Scores, US House, 1953-1983") +
+  xlim(40, 70) + ylim(40, 70) +
+  coord_equal()
+print(gg)
 ```
 
-Across the 31 years for which Edwards reports scores, there are only three years in which the difference between what Edwards reports and what we compute based on the Voteview data is greater than 2 percentage points.  Those years are 1965, 1975, and 1978.  We have not uncovered the source of these three larger discrepancies.
+Across the 31 years for which Edwards reports scores, there are only three years in which the difference between what Edwards reports and what we compute based on the Voteview data is greater than 2 percentage points.  Those years are 1953, 1965, 1975, and 1978.  We have not uncovered the source of these larger discrepancies.
 
-The line plot below show the average level of presidential support in the House over the entire history of the chamber.  Edwards' scores overlayed in blue for comparison in the period for which he reports them. As seen in the previous plot, the only major discrepancy between the two series occurs in 1965.
+The line plot below show the average level of presidential support in the House over the entire history of the chamber.  Edwards' scores are overlayed in red for comparison in the period for which he reports them. As seen in the previous plot, the only major discrepancy between the two series occurs in 1965.
 
 ```{r echo=F}
-gg <- ggplot(agg_support %>% filter(!is.na(score)),
-             aes(x=year,y=score)) + 
-         geom_line(color='#3366AA') +
-         geom_line(aes(y=overall),color="red",na.rm=T) +
-         ylab("Average presidential support score") + 
-         ggtitle("Average presidential support scores, House")
+gg <- ggplot(agg_support_house %>% filter(!is.na(score)),
+             aes(x = year, y = score)) +
+  geom_line(color = '#3366AA') +
+  geom_line(aes(y = overall), color = "red", na.rm = T) +
+  ylab("Average presidential support score") +
+  ggtitle("Average presidential support scores, House") +
+  scale_x_continuous(breaks = seq(1800, max(summary_scores$year +
+                                              4), by = 20))
 gg
 ```
 
@@ -249,14 +257,25 @@ Finally, we plot the presidential support scores for all House members and all S
 Prior to 1950, the number of votes upon which the scores are based are relatively small and the number of distinct scores is small with large numbers of members generally piling up at each possible value.
 
 ```{r echo=F}
-support <- read.csv("house_presidential_support.csv")
-gg <- ggplot(support,
-             aes(x=year,y=score)) +
-             geom_point(size=0.2, col='gray',alpha=0.4,na.rm=T,
-                        position=position_jitter(width=1/3,height=1)) + 
-             geom_line(data=subset(agg_support,!is.na(score)),
-                       aes(x=year,y=score),col="#3366AA",na.rm=T) + 
-             ggtitle("Presidential support scores, House")
+gg <- ggplot(support_scores %>% filter(chamber == "House"),
+             aes(x = year, y = score)) +
+  geom_point(
+    size = 0.2,
+    col = 'gray',
+    alpha = 0.4,
+    na.rm = T,
+    position = position_jitter(width = 1 / 3, height =
+                                 1)
+  ) +
+  geom_line(
+    data = subset(summary_scores, !is.na(score)),
+    aes(x = year, y = score),
+    col = "#3366AA",
+    na.rm = T
+  ) +
+  ggtitle("Presidential support scores, House") +
+  scale_x_continuous(breaks = seq(1800, max(summary_scores$year +
+                                              4), by = 20))
 gg
 ```
 
@@ -265,17 +284,25 @@ gg
 Note that at the moment the database does not include the presidents' positions on roll calls taken in the Senate prior to 1955.
 
 ```{r echo=F,message=F}
-support_sen <- read_csv("senate_presidential_support.csv") %>%
-                 mutate(score=as.numeric(score))
-agg_support_sen <- read_csv("presidential_support_summary.csv") %>%
-                 filter(chamber=="senate")
-gg <- ggplot(support_sen,
-             aes(x=year,y=score)) +
-             geom_point(size=0.2, col='gray',alpha=0.4,na.rm=T,
-                         position=position_jitter(width=1/3,height=1)) +
-             geom_line(data=subset(agg_support_sen,!is.na(score)),
-                       aes(x=year,y=score),col="#3366AA",na.rm=T) + 
-             ggtitle("Presidential support scores, Senate")
+gg <- ggplot(support_scores %>% filter(chamber == "Senate"),
+             aes(x = year, y = score)) +
+  geom_point(
+    size = 0.2,
+    col = 'gray',
+    alpha = 0.4,
+    na.rm = T,
+    position = position_jitter(width = 1 / 3, height =
+                                 1)
+  ) +
+  geom_line(
+    data = subset(summary_scores %>% filter(chamber == "Senate"),!is.na(score)),
+    aes(x = year, y = score),
+    col = "#3366AA",
+    na.rm = T
+  ) +
+  ggtitle("Presidential support scores, Senate") +
+  scale_x_continuous(breaks = seq(1800, max(summary_scores$year +
+                                              4), by = 20))
 gg
 ```
 
