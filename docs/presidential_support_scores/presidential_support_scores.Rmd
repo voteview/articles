@@ -70,13 +70,12 @@ We begin with a function that calculates the score for a particular chamber and 
 
 ```{r warning=FALSE, message=FALSE}
 pres_score <- function() {
+  map_cast_codes <-c(NA, 1, 1, 1, 0, 0, 0, NA, NA, NA)
   # Load vote and description data for the given congress
   vote_dat <-
     read_csv("https://voteview.com/static/data/out/votes/HSall_votes.csv",
              col_types = cols()) %>%
-    mutate(vote =  plyr::mapvalues(cast_code,
-                                   0:9,
-                                   c(NA, 1, 1, 1, 0, 0, 0, NA, NA, NA))) %>%
+    mutate(vote =  map_cast_codes[cast_code+1]) %>%
     select(-prob,-cast_code)
   
   desc_dat <-
@@ -140,21 +139,19 @@ support_scores <- pres_score()
 
 We then calculate the scores across all Congresses and chambers, starting with the the House:
 
-```{r warning=FALSE,message=FALSE,eval=FALSE}
-write.csv(support_scores %>%
+```{r warning=FALSE, message=FALSE}
+write_csv(support_scores %>%
             filter(chamber == "House"),
-          file = "house_presidential_support.csv",
-          row.names = F)
+          file = "house_presidential_support.csv")
 ```
 
 and then the Senate:
 
-```{r warning=FALSE,message=FALSE,eval=FALSE}
-write.csv(
+```{r warning=FALSE, message=FALSE}
+write_csv(
   support_scores %>%
     filter(chamber == "Senate"),
-  file = "senate_presidential_support.csv",
-  row.names = F
+  file = "senate_presidential_support.csv"
 )
 ```
 
@@ -185,7 +182,7 @@ summary_scores <- support_scores %>%
   select(chamber, year, score) %>%
   filter(!is.nan(score))
 
-write.csv(summary_scores,
+write_csv(summary_scores,
           file = "presidential_support_summary.csv")
 ```
 
