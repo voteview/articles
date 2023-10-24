@@ -1,4 +1,3 @@
-
 ---
 title: "Party Loyalty Scores"
 author: "Jeff Lewis"
@@ -6,9 +5,8 @@ original_date: "2023-10-21"
 date: "`r format(Sys.time(), '%B %d, %Y')`" # Do not modify this
 output: html_document
 update_delta: 31
-description: Provides updated versions of Voteview calculations of party loyalty scores. Figures and the underlying data are available for download. 
+description: Provides updated versions of Voteview calculations of party loyalty scores. Scores are available for download. 
 tags:
-  - blog # Valid tags are: blog, help, data. You may use multiple tags for a post
   - data
 ---
 
@@ -54,12 +52,12 @@ majority <- function(v) {
    ifelse(max(m) > sum(!is.na(v))/2, mv, NA)
 }
 
-party_loyalty_score <- vote |> 
-  left_join(rc |>
+party_loyalty_score <- vote %>% 
+  left_join(rc %>%
               select(congress, chamber, rollnumber, date), 
-            by = c("congress", "chamber", "rollnumber")) |>
-  select(-prob) |>
-  left_join(member |> 
+            by = c("congress", "chamber", "rollnumber")) %>%
+  select(-prob) %>%
+  left_join(member %>% 
               select(chamber,
                      congress,
                      icpsr,
@@ -69,23 +67,23 @@ party_loyalty_score <- vote |>
                      party_code), 
             by = c("chamber", 
                    "congress",
-                   "icpsr")) |>
+                   "icpsr")) %>%
   mutate(v = case_when(cast_code %in% 1:3 ~ 1, # add in paired and announced yeas
                        cast_code %in% 4:6 ~ 0, # add in paired and announced noes
-                       TRUE ~ NA)) |>
-  group_by(chamber, congress, rollnumber, party_code) |>
-  mutate(party_majority = majority(v)) |>
+                       TRUE ~ NA_real_)) %>%
+  group_by(chamber, congress, rollnumber, party_code) %>%
+  mutate(party_majority = majority(v)) %>%
   group_by(congress, chamber, icpsr, bioname, 
-           state_abbrev, district_code, party_code) |>
+           state_abbrev, district_code, party_code) %>%
   summarize(party_loyalty = 100*mean(v == party_majority, na.rm=TRUE),
             no_of_votes = sum(!is.na(v)),
-           .groups = "drop")  |> 
-  group_by(congress, chamber) |>
-  mutate(floor_median_party_loyalty = median(party_loyalty, na.rm = TRUE)) |>
-  group_by(congress, chamber, party_code) |>
+           .groups = "drop")  %>%
+  group_by(congress, chamber) %>%
+  mutate(floor_median_party_loyalty = median(party_loyalty, na.rm = TRUE)) %>%
+  group_by(congress, chamber, party_code) %>%
   mutate(caucus_median_party_loyalty = median(party_loyalty, na.rm = TRUE),
-         n_party = n()) |>
-  ungroup() |>
+         n_party = n()) %>%
+  ungroup() %>%
   filter(n_party > 9)
 ```  
 
@@ -95,9 +93,9 @@ Finally, we write the party loyalty dataset in csv format:
 
 ```{r}
 max_cong <- max(party_loyalty_score$congress)
-write_csv(party_loyalty_score |>
-            filter(party_code %in% c(100, 200)) |>
-            mutate(party = ifelse(party_code == 100, "D", "R")) |>
+write_csv(party_loyalty_score %>%
+            filter(party_code %in% c(100, 200)) %>%
+            mutate(party = ifelse(party_code == 100, "D", "R")) %>%
             select(congress:district_code, 
                    party, 
                    party_loyalty, 
@@ -106,7 +104,4 @@ write_csv(party_loyalty_score |>
                    caucus_median_party_loyalty),
             "party_loyalty_scores.csv")
 ```
-
-
-
 
