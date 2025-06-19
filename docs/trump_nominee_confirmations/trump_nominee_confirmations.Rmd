@@ -37,12 +37,11 @@ dat <- rc %>%
 
 ## Overview
 
-There has been a good deal of attention given to President Trump's filling of high-level positions within the executive branch.  Many high-level positions have been [left unfilled](https://www.washingtonpost.com/graphics/politics/trump-administration-appointee-tracker/database/?noredirect=on&utm_term=.63487772ed79) for lengthy periods.  Many nominees have been drawn from outside the pool of what have historically been considered [qualified](https://www.nbcnews.com/politics/white-house/heather-nauert-joins-long-list-questionably-qualified-trump-nominees-n945406) candidates. And, there has been strong and consistent [opposition](https://thehill.com/homenews/senate/452822-trump-nominees-meet-fiercest-opposition-from-warren-sanders-gillibrand) among Democratic senators to President Trump's nominees.  Here we place Democatic senators support for President Trump's executive branch nominees in recent historical context by comparing support for his nominees to support for other president's nominees since 1989.
+There has been a good deal of attention given to President Trump's filling of high-level positions within the executive branch.  During his first term, many high-level positions were [left unfilled](https://www.washingtonpost.com/graphics/politics/trump-administration-appointee-tracker/database/?noredirect=on&utm_term=.63487772ed79) for lengthy periods.  Many of his nominees have been drawn from outside the pool of what have historically been considered [qualified](https://www.nbcnews.com/politics/white-house/heather-nauert-joins-long-list-questionably-qualified-trump-nominees-n945406) candidates. And, there has been strong and consistent [opposition](https://thehill.com/homenews/senate/452822-trump-nominees-meet-fiercest-opposition-from-warren-sanders-gillibrand) among Democratic senators to President Trump's nominees.  This opposition as increased in Trump's second term. Here we place Democratic senators support for President Trump's executive branch nominees in recent historical context by comparing support for his nominees to support for other president's nominees since 1989.
 
-We find that the average level of support among Democratic senators for President Trump's nominees has been lower than support among opposition-party senators for any other recent president.
-Similarly, the fraction of President Trump's nominees that have received a majority of Democratic senators votes is the lowest among opposition parties' senators for a president's nominees since 1989  though Republican senators' support for President Obama's nominees was nearly as low during the first two years of President Obama's second term in office.
+We find that the average level of support among opposition (Democratic) senators for President Trump's nominees was lower that for previous president's nominees in his first term and has been astoundingly low his second term. Similarly, the fraction of President Trump's nominees who have received a majority of Democratic senators votes was lower than is recent predecessors  and has been remarkably low in his second term, though Republican senators' support for President Biden's nominees was also very low.
 
-Finally, looking at the support for presidential nominees among invidual senators, we find that Senators Kirsten Gillibrand, Bernie Sanders[^2], Elizabeth Warren, Cory Booker, Kamala Harris, Edward Markey, and Jeff Merkley have only supported between 7 to 18 percent of Trump appointees.   No other opposition party senators have supported fewer than 25 percent of any other president's nominees since 1989.
+Finally, looking at the support for presidential nominees among invidual senators, we find that Senators Kirsten Gillibrand, Bernie Sanders[^2], Elizabeth Warren, Cory Booker, Edward Markey, and Jeff Merkley .   
 
 ## Analysis
 
@@ -247,7 +246,7 @@ knitr::kable(mem_support %>%
 The histogram below shows the distribution of nominee support rates among opposition-party senators by president since 1989.  The red bars contain senators who supported fewer than half of a president's nominees.  The blue bars contain senators who supported more than half of a president's nominees.  Notice that every Democrat supported over 70 percent of President G. H. W. Bush's nominees and no Democrats supported fewer than half of President G. W. Bush's nominees.  In contrast a substantial number of Republican's supported fewer than half of President Obama's nominees.  However, for President Trump, most Democrats have opposed more than half of his nominees and a sizable number have supported fewer of his nominees than has been seen for any opposition-party senator since 1989.  
 
 
-```{r Make distribution of support across senator-presidente combinations, echo=FALSE, warning=FALSE}
+```{r Make distribution of support across senator-president combinations, echo=FALSE, warning=FALSE}
 ggplot(mem_support, aes(x=supported*100, fill=supported<=0.5)) +
     geom_histogram(breaks=seq(0, 100, by=10), show.legend=FALSE) + 
     facet_wrap(~pres) +
@@ -268,10 +267,9 @@ pp_mem_support <- dat %>%
          vote_question == "On the Nomination",
          !str_detect(str_to_lower(vote_desc), "judge|justice")) %>%
   filter( ifelse(party_code==100, "D", "R") == pres_party) %>%
-  group_by(pres, party_code, bioname, state_abbrev, icpsr, party_code) %>%
   summarize( supported = sum(cast_code %in% 1:3)/sum(cast_code %in% 1:6),
-             n = n()) %>%
-  ungroup() %>%
+             n = n(),
+             .by = c(pres, party_code, bioname, state_abbrev, icpsr)) %>%
   mutate(member = sprintf("%s (%s-%s)", 
                           bioname, 
                           ifelse(party_code==100, "D", "R"), 
