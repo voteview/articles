@@ -66,12 +66,12 @@ overall_party_support <- dat %>%
                   "Clinton", "Clinton", "Clinton", "Clinton",
                   "G. W. Bush", "G. W. Bush","G. W. Bush", "G. W. Bush",
                   "Obama", "Obama", "Obama", "Obama",
-                  "Trump", "Trump"),
+                  "Trump", "Trump", "Biden", "Biden", "Trump"),
          pres_party = c("R","R",
                         "D", "D", "D", "D",
                         "R", "R", "R", "R",
                         "D", "D", "D", "D",
-                        "R", "R")) 
+                        "R", "R", "D", "D","R")) 
 ```
 
 ```{r overall support, warning=FALSE, echo=FALSE}
@@ -80,16 +80,21 @@ library(directlabels)
 
 add_pres_boxes <- function(gg) {
    gg + 
-    geom_rect(aes(xmin=100.66, xmax=102.33, ymin=30, ymax=105), 
+    geom_rect(aes(xmin=100.66, xmax=102.33, ymin=0, ymax=105), 
                   fill="#FFF0F0", alpha=0.1, inherit.aes = FALSE) +
-    geom_rect(aes(xmin=102.66, xmax=106.33, ymin=30, ymax=105), 
+    geom_rect(aes(xmin=102.66, xmax=106.33, ymin=0, ymax=105), 
                   fill="#F2F2FF", alpha=0.1, inherit.aes = FALSE) +
-    geom_rect(aes(xmin=106.66, xmax=110.33, ymin=30, ymax=105), 
+    geom_rect(aes(xmin=106.66, xmax=110.33, ymin=0, ymax=105), 
                   fill="#FFF2F2", alpha=0.1, inherit.aes = FALSE) +
-    geom_rect(aes(xmin=110.66, xmax=114.33, ymin=30, ymax=105), 
+    geom_rect(aes(xmin=110.66, xmax=114.33, ymin=0, ymax=105), 
                   fill="#F2F2FF", alpha=0.1, inherit.aes = FALSE) +
-    geom_rect(aes(xmin=114.66, xmax=116.33, ymin=30, ymax=105), 
+    geom_rect(aes(xmin=114.66, xmax=116.33, ymin=0, ymax=105), 
                   fill="#FFF2F2", alpha=0.05, inherit.aes = FALSE) +
+    geom_rect(aes(xmin=116.66, xmax=118.33, ymin=0, ymax=105), 
+                  fill="#F2F2FF", alpha=0.05, inherit.aes = FALSE) +
+    geom_rect(aes(xmin=118.66, xmax=120.33, ymin=0, ymax=105), 
+                  fill="#FFF2F2", alpha=0.05, inherit.aes = FALSE) +
+
     geom_text(aes(x=101.5, y=110, label="Bush"), 
               col="darkgrey", size=3, inherit.aes=FALSE) +
     geom_text(data=tibble(), aes(x=104.5, y=110, label="Clinton"), 
@@ -99,11 +104,17 @@ add_pres_boxes <- function(gg) {
     geom_text(data=tibble(), aes(x=112.5, y=110, label="Obama"), 
               col="darkgrey", size=3, inherit.aes=FALSE) +
     geom_text(data=tibble(), aes(x=115.5, y=110, label="Trump"), 
+              col="darkgrey", size=3, inherit.aes=FALSE) +
+    geom_text(data=tibble(), aes(x=117.5, y=110, label="Biden"), 
+              col="darkgrey", size=3, inherit.aes=FALSE) +
+    geom_text(data=tibble(), aes(x=119.5, y=110, label="Trump"), 
               col="darkgrey", size=3, inherit.aes=FALSE)
 }
 
 overall_party_support_long <- overall_party_support %>%
-                        gather(party, support, -congress, -pres_party, -pres) %>%
+                        pivot_longer(c(`100`, `200`),
+                                     names_to = "party", 
+                                     values_to = "support") %>%
                         mutate( party = ifelse(party==100, "D", "R"),
                                 of_pres_party = ifelse(party==pres_party,
                                                        "  President's party",
@@ -115,8 +126,9 @@ ggplot(overall_party_support_long, aes(x=congress, y=100*support,
   geom_point(show.legend = FALSE) +
   geom_line(size=0.15, color="grey") +
   ylab("Overall percent vote for nominees") + xlab("Congress") +
-  scale_x_continuous(breaks=seq(101, 116, 2), limits=c(100.5,118.35)) +
-  scale_y_continuous(breaks=seq(30,100,10), limits=c(30,112) ) +
+  scale_x_continuous(breaks=seq(101, 119, 2), limits=c(100.5,121.8),
+                     minor_breaks = NULL) +
+  scale_y_continuous(breaks=seq(0,100,10), limits=c(0,112) ) +
   scale_color_manual(values=c("R"="red","D"="blue")) +
   geom_dl(aes(label = of_pres_party), 
           method = list(dl.combine("last.points"), 
@@ -144,12 +156,12 @@ party_supported <- dat %>%
                   "Clinton", "Clinton", "Clinton", "Clinton",
                   "G. W. Bush", "G. W. Bush","G. W. Bush", "G. W. Bush",
                   "Obama", "Obama", "Obama", "Obama",
-                  "Trump", "Trump"),
+                  "Trump", "Trump", "Biden", "Biden", "Trump"),
          pres_party = c("R","R",
                         "D", "D", "D", "D",
                         "R", "R", "R", "R",
                         "D", "D", "D", "D",
-                        "R", "R")) 
+                        "R", "R", "D", "D", "R")) 
 
 ```
 
@@ -168,8 +180,9 @@ ggplot(party_supported_long, aes(x=congress, y=100*supported,
   geom_point(show.legend = FALSE) +
   geom_line(size=0.15, color="grey")  +
   ylab("Percent of nomminees supported") + xlab("Congress") +
-  scale_x_continuous(breaks=seq(101, 116, 2), limits=c(100.5,118.35)) +
-  scale_y_continuous(breaks=seq(30, 100, 10), limits=c(25,112)) +
+  scale_x_continuous(breaks=seq(101, 120, 2), limits=c(100.5,122.35), 
+                     minor_breaks = NULL) +
+  scale_y_continuous(breaks=seq(0, 100, 10), limits=c(0,112)) +
   scale_color_manual(values=c("R"="red","D"="blue")) +
   geom_dl(aes(label = of_pres_party), 
           method = list(dl.combine("last.points"), 
@@ -186,28 +199,28 @@ The two tables below show the senators who voted to confirm the nominees of part
 The table below shows the lowest rates of support for nominees of each president since 1989.  The table shows every senator who supported less the half of any president's nominees.[^1]  Notice how many of these involve Trump nominees and the very low rates of support for Trump nominees among a number of notable current Democratic senators.
 
 ```{r rates of nominee opposition by senator, echo=FALSE, warning=FALSE}
-pres <- tibble(congress=101:116,
+pres <- tibble(congress=101:119,
                pres = factor(c("G. H. W. Bush", "G. H. W. Bush", 
                   "Clinton", "Clinton", "Clinton", "Clinton",
                   "G. W. Bush", "G. W. Bush","G. W. Bush", "G. W. Bush",
                   "Obama", "Obama", "Obama", "Obama",
-                  "Trump", "Trump"), levels=c("G. H. W. Bush", "Clinton", "G. W. Bush",
-                                              "Obama", "Trump")),
+                  "Trump (I)", "Trump (I)", "Biden", "Biden", "Trump (II)"), 
+                  levels=c("G. H. W. Bush", "Clinton", "G. W. Bush",
+                           "Obama", "Trump (I)", "Biden", "Trump (II)")),
                pres_party = c("R","R",
                         "D", "D", "D", "D",
                         "R", "R", "R", "R",
                         "D", "D", "D", "D",
-                        "R", "R"))
+                        "R", "R", "D", "D", "R"))
 mem_support <- dat %>%
   left_join(pres, by="congress") %>%
   filter(party_code %in% c(100,200), 
          vote_question == "On the Nomination",
          !str_detect(str_to_lower(vote_desc), "judge|justice")) %>%
   filter( ifelse(party_code==100, "D", "R") != pres_party) %>%
-  group_by(pres, party_code, bioname, state_abbrev, icpsr, party_code) %>%
   summarize( supported = sum(cast_code %in% 1:3)/sum(cast_code %in% 1:6),
-             n = n()) %>%
-  ungroup() %>%
+             n = n(),
+             .by = c(pres, party_code, bioname, state_abbrev, icpsr)) %>%
   mutate(member = sprintf("%s (%s-%s)", 
                           bioname, 
                           ifelse(party_code==100, "D", "R"), 
