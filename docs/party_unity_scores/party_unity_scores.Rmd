@@ -46,7 +46,7 @@ We then identify the major parties in each Congress:
 big_party <- member_dat |>
                 filter(chamber != "President" &
                        !(congress %in% c(18, 31:34))) |>
-                summarize(num=n(), .groups="drop", .by=c(congress, chamber, party_code)) |>
+                summarize(num=n(), .by=c(congress, chamber, party_code)) |>
                 slice_max(num, n=2, by=c(congress, chamber)) |>
                 select(-num)
 ```
@@ -68,14 +68,14 @@ vote_code_map <- c(1,1,1,2,2,2,0,0,0)
 unity_votes <- major_dat |>
                   mutate(cast_code = vote_code_map[cast_code]) |>
                   filter(cast_code != 0) |>
-                  summarize(n=n(), .groups="drop", .by=c(congress, chamber, rollnumber, party_code, cast_code)) |>
+                  summarize(n=n(), .by=c(congress, chamber, rollnumber, party_code, cast_code)) |>
                   filter(n()==1 | n>min(n), .by=c(congress, chamber, rollnumber, party_code)) |>
-                  summarize(unity = min(cast_code) != max(cast_code), .groups="drop", .by=c(congress, chamber, rollnumber))
+                  summarize(unity = min(cast_code) != max(cast_code), 
+                            .by=c(congress, chamber, rollnumber))
 
 unity_votes_by_congress <- unity_votes |>
                   summarize(unity_votes = sum(unity),
                             total_votes = n(),
-                            .groups = "drop",
                             .by = c(chamber, congress)) |>
                   mutate(percent_unity = unity_votes/total_votes) |>
                   pivot_longer(cols = c(unity_votes, total_votes, percent_unity),
@@ -173,7 +173,6 @@ party_unity_members <- major_dat |>
           mutate(party_maj_choice = median(cast_code), .by = c(congress, chamber, rollnumber, party_code)) |>
           summarize(total_unity_votes=n(),
                     with_party_unity_votes = sum(cast_code==party_maj_choice),
-                    .groups="drop",
                     .by = c(congress, chamber, icpsr, bioname, party_code, state_abbrev, district_code)) |>
           mutate(party_unity_score = with_party_unity_votes/total_unity_votes )
 

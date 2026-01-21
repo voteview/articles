@@ -123,7 +123,6 @@ pres_score <- function() {
                      pres_matches / pres_votes, NA),
         1
       ),
-      .groups = "drop",
       .by = c(congress, chamber, year, icpsr, bioname, state_abbrev, district_code)
     )
 }
@@ -161,14 +160,12 @@ summary_scores <- support_scores |>
     pres_matches = sum(pres_matches),
     pres_votes = mean(pres_votes),
     pres_there_for = sum(pres_there_for),
-    .groups = "drop",
     .by = c(chamber, icpsr, congress, year)
   ) |>
   summarize(
     pres_matches = mean(pres_matches),
     pres_votes = mean(pres_votes),
     pres_there_for = mean(pres_there_for),
-    .groups = "drop",
     .by = c(chamber, year)
   ) |>
   mutate(score = round(100 * pres_matches / pres_votes, 1)) |>

@@ -74,7 +74,6 @@ party_loyalty_score <- vote |>
   mutate(party_majority = majority(v), .by = c(chamber, congress, rollnumber, party_code)) |>
   summarize(party_loyalty = 100*mean(v == party_majority, na.rm=TRUE),
             no_of_votes = sum(!is.na(v)),
-           .groups = "drop",
            .by = c(congress, chamber, icpsr, bioname, state_abbrev, district_code, party_code)) |>
   mutate(floor_median_party_loyalty = median(party_loyalty, na.rm = TRUE), .by = c(congress, chamber)) |>
   mutate(caucus_median_party_loyalty = median(party_loyalty, na.rm = TRUE),
