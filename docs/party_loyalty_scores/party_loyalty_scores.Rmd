@@ -23,7 +23,7 @@ library(tidyverse)
 
 ## Overview
 
-Here we construct simple Party Loyality Scores for members of the House and Senate.   These data provide in tabular form the rates of voting with their party majority for each member. Members in parties with fewer then 10 members are dropped. 
+Here we construct simple Party Loyalty Scores for members of the House and Senate.   These data provide in tabular form the rates of voting with their party majority for each member. Members in parties with fewer than 10 members are dropped. 
 
 You can download the loyalty scores in csv format [here](party_loyalty_scores.csv).
 

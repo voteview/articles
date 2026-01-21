@@ -18,23 +18,22 @@ p_load(ggplot2, wnominate, kableExtra, tidyverse)
 ```{r message=FALSE, warning=FALSE, echo=FALSE}
 
 h_all <- read_csv("https://voteview.com/static/data/out/members/Hall_members.csv")
-h116frosh_ids <- h_all %>%
-                   group_by(icpsr) %>%
-                   summarize(first_cong = min(congress)) %>%
-                   filter(first_cong == 116) %>%
+h116frosh_ids <- h_all |>
+                   summarize(first_cong = min(congress), .by = icpsr) |>
+                   filter(first_cong == 116) |>
                    pull(icpsr)
-  
-h116frosh <- h_all %>% 
-    filter(party_code==100, 
-           congress==116, 
-           icpsr %in% h116frosh_ids) %>%
-    mutate(name = sprintf("%s (%s-%s)", bioname, state_abbrev, district_code)) %>%
-    select(name, icpsr, nominate_dim1) %>%
-    arrange(nominate_dim1) %>% 
-    mutate(rank = 1:n()) %>%
-    select(rank, everything()) 
 
-aoc_rank <- h116frosh %>% filter(str_detect(name, "OCASIO")) %>% pull(rank)
+h116frosh <- h_all |>
+    filter(party_code==100,
+           congress==116,
+           icpsr %in% h116frosh_ids) |>
+    mutate(name = sprintf("%s (%s-%s)", bioname, state_abbrev, district_code)) |>
+    select(name, icpsr, nominate_dim1) |>
+    arrange(nominate_dim1) |>
+    mutate(rank = 1:n()) |>
+    select(rank, everything())
+
+aoc_rank <- h116frosh |> filter(str_detect(name, "OCASIO")) |> pull(rank)
 
 num_suff <- function(x) {
   suff <- c("0"="th",
@@ -65,13 +64,13 @@ Over time, we expect that the 116th Congress will hold more votes that sharply d
 Here we see that while most of the highest-profile new liberals in the Congress are at the top of NOMINATE's ranking, Ocasio-Cortez is only estimated to be the `r num_suff(as.integer(aoc_rank))` most liberal of the 56 new Democrats.
 
 ```{r message=FALSE, warning=FALSE, echo=FALSE}
-h116frosh %>% 
-  select(rank, everything(), -icpsr) %>% 
-  knitr::kable(col.names=c("Rank", "Member", "NOMINATE 1st Dimension")) %>%
-  row_spec(c(1:3, aoc_rank), bold = T, background = "#f6fcba") %>%
+h116frosh |>
+  select(rank, everything(), -icpsr) |>
+  knitr::kable(col.names=c("Rank", "Member", "NOMINATE 1st Dimension")) |>
+  row_spec(c(1:3, aoc_rank), bold = T, background = "#f6fcba") |>
   kableExtra::kable_styling(bootstrap_options = c("striped", "hover"),
-                            font_size = 10, 
-                            full_width = FALSE) 
+                            font_size = 10,
+                            full_width = FALSE)
 
 ```
 
@@ -89,39 +88,39 @@ For example, on rollcall number 48,  Ocasio-Cortez was the **only** Democrat to 
 
 ```{r echo=FALSE}
 vt <- c("Y", "Y", "Y", "N", "N", "N", "A", "A", "A")
-h116_votes_frosh_left <- h116_votes %>% 
-    filter(icpsr %in% c(21975, 21950, 21979)) %>%
-    arrange(rollnumber, icpsr) %>%
-    group_by(rollnumber) %>%
+h116_votes_frosh_left <- h116_votes |>
+    filter(icpsr %in% c(21975, 21950, 21979)) |>
+    arrange(rollnumber, icpsr) |>
     summarize( votes = paste0(vt[cast_code][order(icpsr)], collapse=""),
                #probs = paste0(prob, collapse=", "),
                gmp = exp(sum(log(prob/100))/sum(!is.na(prob))),
-               gmp = ifelse(is.na(gmp), ".", sprintf("%3.1f", gmp*100)))
+               gmp = ifelse(is.na(gmp), ".", sprintf("%3.1f", gmp*100)),
+               .by = rollnumber)
 ```
 
 
 ```{r message=FALSE, warning=FALSE, echo=FALSE}
-aoc_low_prob <- h116_votes %>% 
-  filter(icpsr == 21949, prob < 40) %>%
-  left_join(h116_rollcalls, by="rollnumber") %>%
-  left_join(h116_votes_frosh_left) %>%
+aoc_low_prob <- h116_votes |>
+  filter(icpsr == 21949, prob < 40) |>
+  left_join(h116_rollcalls, by="rollnumber") |>
+  left_join(h116_votes_frosh_left) |>
   mutate(vote = ifelse(cast_code==1, "Y", "N"),
          desc = ifelse(is.na(vote_desc), vote_question, sprintf("%s (%s)", vote_desc, vote_question)),
-         rollcall = sprintf('<a href="https://voteview.com/rollcall/RH116%04i">%i</a>', 
-                            rollnumber, rollnumber)) %>%
-  select(rollnumber, rollcall, bill_number, desc, vote, prob, votes, gmp, yea_count, 
-         nay_count) %>%
-  arrange(prob) 
+         rollcall = sprintf('<a href="https://voteview.com/rollcall/RH116%04i">%i</a>',
+                            rollnumber, rollnumber)) |>
+  select(rollnumber, rollcall, bill_number, desc, vote, prob, votes, gmp, yea_count,
+         nay_count) |>
+  arrange(prob)
 
-aoc_low_prob %>%
-  select(-rollnumber, -nay_count, -yea_count) %>%
-  knitr::kable(format="html", 
+aoc_low_prob |>
+  select(-rollnumber, -nay_count, -yea_count) |>
+  knitr::kable(format="html",
                escape=FALSE,
                col.names=c("Rollcall", "Bill", "Description",
-                           "Vote", "Prob.", "Votes", "Avg. Prob.")) %>%
-  kableExtra::column_spec(4,border_left=TRUE) %>%
-  kableExtra::column_spec(6,border_left=TRUE) %>%
-  kableExtra::add_header_above(c(" "=3,"Ocasio-Cortez"=2, "Underwood/Tlaib/Omar"=2)) %>%
+                           "Vote", "Prob.", "Votes", "Avg. Prob.")) |>
+  kableExtra::column_spec(4,border_left=TRUE) |>
+  kableExtra::column_spec(6,border_left=TRUE) |>
+  kableExtra::add_header_above(c(" "=3,"Ocasio-Cortez"=2, "Underwood/Tlaib/Omar"=2)) |>
   kableExtra::kable_styling(bootstrap_options = c("striped", "hover"),
                             font_size = 10, full_width = FALSE)
 
@@ -132,18 +131,18 @@ aoc_low_prob %>%
 The following plot shows the probability that NOMINATE assigns to votes cast by Ocasio-Cortez against the average probability that it assigns to votes cast by Omar, Tlaib and Underwood on each rollcall in which Ocasio-Cortez, Omar, Tlaib, and Underwood all voted the same way.  Here we see that on most of these votes, even with her moderate location, Ocasio-Cortez's votes are well predicted by NOMINATE.  Put another way, we find only a small number of votes for which moving Ocasio-Cortez to a similar location to Omar, Tlaib and Underwood would substantially increase the fit of Ocasio-Cortez's votes. Thus, while her go-it-alone protest votes provide a strong impetus for NOMINATE to moderate Ocasio-Cortez's location, the large number of votes on which she agrees with the other liberal Democrats provide little impetus for moving her position leftward. 
 
 ```{r echo=FALSE, warning=FALSE, message=FALSE}
-h116_votes %>% 
-  filter(icpsr == 21949) %>%
-  left_join(h116_rollcalls, by="rollnumber") %>%
-  left_join(h116_votes_frosh_left) %>%
-  filter((votes=="YYY" & cast_code==1) | (votes=="NNN" & cast_code==6)) %>%
+h116_votes |>
+  filter(icpsr == 21949) |>
+  left_join(h116_rollcalls, by="rollnumber") |>
+  left_join(h116_votes_frosh_left) |>
+  filter((votes=="YYY" & cast_code==1) | (votes=="NNN" & cast_code==6)) |>
   ggplot(aes(x=prob, y=as.numeric(gmp))) +
   coord_equal() +
   xlim(0,100) +
   ylim(0,100) +
-  geom_abline(intercept=0, slope=1, size=0.25) +
+  geom_abline(intercept=0, slope=1, linewidth=0.25) +
   theme_minimal() +
-  xlab("Probability of Ocasio-Cortez's vote") + 
+  xlab("Probability of Ocasio-Cortez's vote") +
   ylab("Probability of Underwood/Omar/Tlaib's vote") +
   geom_point(shape=1, alpha=0.5)
 ```
@@ -155,34 +154,36 @@ places <- expand.grid(seq(-1,1,length=300), seq(-1,1,length=300))
 places <- places[places[,1]^2 + places[,2]^2 <= 1, ]
 places <- rbind(places, c(-.193, -.981))
 
-aoc_vts <- h116_votes %>% 
-  filter(icpsr == 21949, cast_code %in% c(1,6)) %>%
-  left_join(h116_rollcalls, by="rollnumber") %>%
-  filter(!(nominate_spread_1 == 0 & nominate_spread_2 == 0)) %>%
+aoc_votes_prep <- h116_votes |>
+  filter(icpsr == 21949, cast_code %in% c(1,6)) |>
+  left_join(h116_rollcalls, by="rollnumber") |>
+  filter(!(nominate_spread_1 == 0 & nominate_spread_2 == 0)) |>
   mutate(yea_1 = nominate_mid_1 - nominate_spread_1,
          no_1 = nominate_mid_1 + nominate_spread_1,
          yea_2 = nominate_mid_2 - nominate_spread_2,
-         no_2 = nominate_mid_2 + nominate_spread_2) %>%
-  do( { pp <- nomprob(yea = cbind(.$yea_1, .$yea_2),
-              nay = cbind(.$no_1, .$no_2),
+         no_2 = nominate_mid_2 + nominate_spread_2)
+
+# Calculate probabilities using nomprob
+pp <- nomprob(yea = cbind(aoc_votes_prep$yea_1, aoc_votes_prep$yea_2),
+              nay = cbind(aoc_votes_prep$no_1, aoc_votes_prep$no_2),
               ideal = places,
               Beta=8.8633,
               dimweight=c(1, 0.4616^2),
               normal=1)
-       t((.$cast_code==1)*t(pp) + (.$cast_code==6)*(1-t(pp)))
-       } %>% as.data.frame()) %>%
-  mutate(x1=places[,1], x2=places[,2]) %>%
-  gather(vote, prob, -x1, -x2) %>% 
-  group_by(x1, x2) %>%
+prob_matrix <- t((aoc_votes_prep$cast_code==1)*t(pp) + (aoc_votes_prep$cast_code==6)*(1-t(pp)))
+
+aoc_vts <- as.data.frame(prob_matrix) |>
+  mutate(x1=places[,1], x2=places[,2]) |>
+  pivot_longer(cols = -c(x1, x2), names_to = "vote", values_to = "prob") |>
   summarize(gmp = exp(mean(log(prob), na.rm=TRUE)),
-            n = n()) %>%
-  ungroup()
+            n = n(),
+            .by = c(x1, x2))
 ```
 
 Here we plot the likelihood (represented as the geometric mean probability of her vote choices) of Ocasio-Cortez's votes being cast by a member located anywhere in the DW-NOMINATE space.  Her actual estimated location, the one that maximizes the likelihood of her votes, is represented by the black dot.  Note that the likelihood of her votes falls off rapidly as her location is shifted to the right while she can be moved along the edge of the space to the left with relatively less reduction in fit.  
 
 ```{r echo=FALSE}
-aoc_pos <- aoc_vts %>% filter(max(gmp)==gmp)
+aoc_pos <- aoc_vts |> filter(max(gmp)==gmp)
 
 ggplot(aoc_vts, aes(x=x1, y=x2, color=gmp)) + 
   scale_color_gradientn(colours = terrain.colors(7)) +
@@ -202,9 +203,9 @@ knitr::knit_exit()
 
 
 ```{r}
-dat <- h116_votes %>%
-         select(rollnumber, icpsr, cast_code) %>%
-         spread(rollnumber, cast_code, fill=0)  %>%
+dat <- h116_votes |>
+         select(rollnumber, icpsr, cast_code) |>
+         pivot_wider(names_from = rollnumber, values_from = cast_code, values_fill = 0) |>
          arrange(icpsr)
 
 rc_dat <- rollcall(as.matrix(dat[,-1]), 
@@ -221,9 +222,9 @@ plot(wnom116)
 ```
 
 ```{r}
-wfrosh116 <-tibble(icpsr=as.numeric(dat[[1]]), wnom1=wnom116$legislator$coord1D) %>%
-   right_join(h116frosh, by="icpsr") %>%
-   arrange(wnom1) %>%
+wfrosh116 <-tibble(icpsr=as.numeric(dat[[1]]), wnom1=wnom116$legislator$coord1D) |>
+   right_join(h116frosh, by="icpsr") |>
+   arrange(wnom1) |>
    mutate(wrank = 1:n())
 wfrosh116
 ```

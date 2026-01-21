@@ -7,14 +7,12 @@ output: html_document
 update_delta: 31
 description: Provides updated versions of the classic Voteview calculations of party unity scores. Figures and the underlying data are available for download. 
 tags:
-  - blog # Valid tags are: blog, help, data. You may use multiple tags for a post
   - data
 ---
 
 ```{r echo=FALSE, message=FALSE, error=FALSE}
 # We use pacman to load and install dependencies.
 library(pacman)
-# Please list your article's dependencies here, comma separated:
 p_load(tidyverse, ggplot2, ggrepel)
 ```
 
@@ -45,23 +43,21 @@ member_dat <- read_csv("https://voteview.com/static/data/out/members/HSall_membe
 We then identify the major parties in each Congress:
 
 ```{r}
-big_party <- member_dat %>%
-                filter(chamber != "President" &  
-                       !(congress %in% c(18, 31:34))) %>%
-                group_by(congress, chamber, party_code) %>%
-                summarize(num=n(), .groups="drop") %>%
-                group_by(congress, chamber) %>%
-                top_n(2, num) %>%
-                dplyr::select(-num)
+big_party <- member_dat |>
+                filter(chamber != "President" &
+                       !(congress %in% c(18, 31:34))) |>
+                summarize(num=n(), .by=c(congress, chamber, party_code)) |>
+                slice_max(num, n=2, by=c(congress, chamber)) |>
+                select(-num)
 ```
 
 
 We can then use this dataframe to subset the master data down to just the votes cast by major party members.
 
 ```{r load_data, warning = FALSE, messages = FALSE}
-major_dat <- read_csv("https://voteview.com/static/data/out/votes/HSall_votes.csv", col_types = cols()) %>%
-            left_join(member_dat, by = c("congress", "chamber", "icpsr")) %>%
-	    select(congress, chamber, rollnumber, icpsr, bioname, party_code, state_abbrev, district_code, cast_code) %>%
+major_dat <- read_csv("https://voteview.com/static/data/out/votes/HSall_votes.csv", col_types = cols()) |>
+            left_join(member_dat, by = c("congress", "chamber", "icpsr")) |>
+	    select(congress, chamber, rollnumber, icpsr, bioname, party_code, state_abbrev, district_code, cast_code) |>
             right_join(big_party, by =  c("congress", "chamber", "party_code"))
 rm(member_dat)
 ```
@@ -69,27 +65,25 @@ rm(member_dat)
 ## Party unity votes by Congress
 ```{r}
 vote_code_map <- c(1,1,1,2,2,2,0,0,0)
-unity_votes <- major_dat %>% 
-                  transform(cast_code = vote_code_map[cast_code]) %>%
-                  filter(cast_code != 0) %>%
-                  group_by(congress, chamber, rollnumber, party_code, cast_code) %>%
-                  summarize(n=n(), .groups="drop") %>%
-                  group_by(congress, chamber, rollnumber, party_code) %>%
-                  filter(n()==1 | n>min(n)) %>%
-                  group_by(congress, chamber, rollnumber) %>%
-                  summarize(unity = min(cast_code) != max(cast_code), .groups="drop") 
+unity_votes <- major_dat |>
+                  mutate(cast_code = vote_code_map[cast_code]) |>
+                  filter(cast_code != 0) |>
+                  summarize(n=n(), .by=c(congress, chamber, rollnumber, party_code, cast_code)) |>
+                  filter(n()==1 | n>min(n), .by=c(congress, chamber, rollnumber, party_code)) |>
+                  summarize(unity = min(cast_code) != max(cast_code), 
+                            .by=c(congress, chamber, rollnumber))
 
-unity_votes_by_congress <- unity_votes %>%
-                  group_by(chamber, congress) %>%
+unity_votes_by_congress <- unity_votes |>
                   summarize(unity_votes = sum(unity),
-                            total_votes = n(), 
-                            .groups = "drop") %>%
-                  mutate(percent_unity = unity_votes/total_votes) %>%
-                  gather(fld,val,-chamber,-congress) %>%
-                  unite(chamber_fld, chamber, fld) %>%
-                  spread(chamber_fld, val) %>%
-                  rename_all(tolower)
-write_csv(path="party_unity_by_congress.csv", unity_votes_by_congress)
+                            total_votes = n(),
+                            .by = c(chamber, congress)) |>
+                  mutate(percent_unity = unity_votes/total_votes) |>
+                  pivot_longer(cols = c(unity_votes, total_votes, percent_unity),
+                               names_to = "fld", values_to = "val") |>
+                  unite(chamber_fld, chamber, fld) |>
+                  pivot_wider(names_from = chamber_fld, values_from = val) |>
+                  rename_with(tolower)
+write_csv(unity_votes_by_congress, file="party_unity_by_congress.csv")
 head(unity_votes_by_congress) 
 ```
 
@@ -132,12 +126,12 @@ firstup <- function(x) {
 glimpse(unity_votes_by_congress)
 glimpse(poole_unity_by_congress)
 
-ubc <- bind_rows(unity_votes_by_congress %>% mutate(version="New"),
-                 poole_unity_by_congress %>% 
-                      mutate(version="Poole") %>% 
-                      filter(!(congress %in%c(18,31:34)))) %>%
-       select(contains("percent"), congress, version) %>%
-       gather(chamber, percent,-congress, -version) %>%
+ubc <- bind_rows(unity_votes_by_congress |> mutate(version="New"),
+                 poole_unity_by_congress |>
+                      mutate(version="Poole") |>
+                      filter(!(congress %in%c(18,31:34)))) |>
+       select(contains("percent"), congress, version) |>
+       pivot_longer(cols = contains("percent"), names_to = "chamber", values_to = "percent") |>
        mutate(chamber = firstup(sapply(str_split(chamber, "\\_"), function(x) x[[1]])))
 ```
 
@@ -166,26 +160,23 @@ Overall, the two sets of scores line up very closely. The orange line for the ne
 
 Poole provided data on the rate at which each member voted with their party on party unity votes.  We will reproduce and continue those data here.
 
-We limit the votes to just those that are party unity votes as determined above. We filter out the voters from prior to the 35th Congress as well as all of the absentions and missed votes.For every congress, chamber, roll call and party, we determine the modal vote.  We then count the number of times that each member voted with the modal member of their party across party unity votes.   
+We limit the votes to just those that are party unity votes as determined above. We filter out the voters from prior to the 35th Congress as well as all of the abstentions and missed votes.For every congress, chamber, roll call and party, we determine the modal vote.  We then count the number of times that each member voted with the modal member of their party across party unity votes.   
 
 
 ```{r}
-party_unity_members <- major_dat %>% 
-          right_join(unity_votes %>% filter(unity), 
-                    by = c("congress", "chamber", "rollnumber")) %>%
-          filter(congress > 34) %>%
-          mutate(cast_code = vote_code_map[cast_code]) %>%
-          filter(cast_code > 0) %>%
-          group_by(congress, chamber, rollnumber, party_code) %>%
-          mutate(party_maj_choice = median(cast_code)) %>%
-          group_by(congress, chamber, icpsr, bioname, 
-                   party_code, state_abbrev, district_code) %>%
+party_unity_members <- major_dat |>
+          right_join(unity_votes |> filter(unity),
+                    by = c("congress", "chamber", "rollnumber")) |>
+          filter(congress > 34) |>
+          mutate(cast_code = vote_code_map[cast_code]) |>
+          filter(cast_code > 0) |>
+          mutate(party_maj_choice = median(cast_code), .by = c(congress, chamber, rollnumber, party_code)) |>
           summarize(total_unity_votes=n(),
                     with_party_unity_votes = sum(cast_code==party_maj_choice),
-                    .groups="drop") %>%
+                    .by = c(congress, chamber, icpsr, bioname, party_code, state_abbrev, district_code)) |>
           mutate(party_unity_score = with_party_unity_votes/total_unity_votes )
-        
-write_csv(party_unity_members, path="party_unity_by_member.csv")
+
+write_csv(party_unity_members, file="party_unity_by_member.csv")
 rm(major_dat)
 ```
 
@@ -214,11 +205,11 @@ ctypes <- cols(
 
 poole_party_unity_members  <- bind_rows( read_fwf("https://legacy.voteview.com/k7ftp/Senate_Party_Unity_35-113.DAT",
                                                      col_positions=flds,
-                                                     col_types=ctypes) %>%
+                                                     col_types=ctypes) |>
                                            mutate(chamber="Senate"),
                                          read_fwf("https://legacy.voteview.com/k7ftp/House_Party_Unity_35-113.DAT",
                                                     col_positions=flds,
-                                                    col_types=ctypes) %>%
+                                                    col_types=ctypes) |>
                                            mutate(chamber="House") )
 ```
 
@@ -241,5 +232,4 @@ ggplot(tg, aes(x=party_unity_score.x,
 ```
 
 Most of the scores are very similar across the two datasets.  
-
 
