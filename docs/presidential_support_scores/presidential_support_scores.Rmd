@@ -48,7 +48,7 @@ The following csv files are available:
 
 * [house_presidential_support.csv](house_presidential_support.csv): Member-year level presidential support scores for House members.  
 
-* [senate_presidential_support.csv](senate_presidential_support.csv): Member-year level presidential support scores for House members.  
+* [senate_presidential_support.csv](senate_presidential_support.csv): Member-year level presidential support scores for Senate members.  
 
 The member-year level files contain standard Voteview member metadata and 
 identifiers as well as:

@@ -27,7 +27,7 @@ Quick Links:
 * **clerk_rollnumber**: Number assigned by Congress to the rollcall. Includes quorum calls and vacated votes, starts from `1` at the beginning of the *session* (not at the beginning of the *congress*).
 * **bill_number**: String. Number of the bill on which rollcall was held.
 * **vote_result**: Official result of rollcall, may not exist for all votes.
-* **vote_desc**: Description fo the rollcall assigned by Congressional staff.
+* **vote_desc**: Description of the rollcall assigned by Congressional staff.
 * **vote_question**: String. Question addressed by the rollcall. e.g. "On Agreeing to the Amendment".
 * **dtl_desc**: Description of the rollcall, collected from historical sources.
 * **congress_url** (JSON only.) URL of congress.gov bill page.

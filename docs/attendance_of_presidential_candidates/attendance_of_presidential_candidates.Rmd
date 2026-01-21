@@ -97,7 +97,7 @@ ggplot(dat_by_month %>%
   geom_point() + 
   facet_wrap(~bioname, ncol=3) + 
   theme_minimal() +
-  xlab("Month") + ylab("Attendence (Share of Roll Calls Cast)") +
+  xlab("Month") + ylab("Attendance (Share of Roll Calls Cast)") +
   ylim(0,100) +
   scale_x_date(date_labels="%Y-%b") +
   theme(axis.text.x = element_text(angle = 55, hjust = 1)) 

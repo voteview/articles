@@ -37,7 +37,7 @@ members <- read_csv("https://voteview.com/static/data/out/members/Sall_members.c
 votes <- read_csv("https://voteview.com/static/data/out/votes/Sall_votes.csv") %>% filter(congress>60)
 ```
 
-## Calculating pary loyalty
+## Calculating party loyalty
 
 I then calculate the rate at which all Democratic senators vote with their party over the their entire careers.  Finally, I filter out just those Senators whose service in the Congress overlapped with Mr. Biden's.  A member is said to have voted with her party if she cast a vote that matched those of the plurality of the Democratic caucus.  Rollcalls on which the party was evenly divided are excluded.      
 

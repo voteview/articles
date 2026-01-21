@@ -1,7 +1,7 @@
 ---
 title: Polarization in Congress
 author: Jeff Lewis
-description: Provides updated versions the classic Voteview plots of party mean DW-NOMINATE scores of overtime.  Figures and the underlying data are available for download. 
+description: Provides updated versions the classic Voteview plots of party mean DW-NOMINATE scores over time.  Figures and the underlying data are available for download. 
 original_date: "2018-02-01" # Set the original date of your contribution in YYYY-MM-DD format here.
 date: "`r format(Sys.time(), '%B %d, %Y')`" # Do not modify this
 update_delta: 31

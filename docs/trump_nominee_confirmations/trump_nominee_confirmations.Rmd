@@ -1,7 +1,7 @@
 ---
 title: "Senate support for presidential executive branch nominees since 1989"
 author: "Jeff Lewis"
-description: Putting Democratic senators support from Trump appointees in recent historical context.
+description: Putting Democratic senators' support for Trump appointees in recent historical context.
 original_date: "2019-05-23"
 date: "`r format(Sys.time(), '%B %d, %Y')`"
 update_delta: 31
@@ -37,12 +37,12 @@ dat <- rc %>%
 
 ## Overview
 
-There has been a good deal of attention given to President Trump's filling of high-level positions within the executive branch.  Many high-level positions have been [left unfilled](https://www.washingtonpost.com/graphics/politics/trump-administration-appointee-tracker/database/?noredirect=on&utm_term=.63487772ed79) for lengthy periods.  Many nominees have been drawn from outside the pool of what have historically been considered [qualified](https://www.nbcnews.com/politics/white-house/heather-nauert-joins-long-list-questionably-qualified-trump-nominees-n945406) candidates. And, there has been strong and consistent [opposition](https://thehill.com/homenews/senate/452822-trump-nominees-meet-fiercest-opposition-from-warren-sanders-gillibrand) among Democratic senators to President Trump's nominees.  Here we place Democatic senators support for President Trump's executive branch nominees in recent historical context by comparing support for his nominees to support for other president's nominees since 1989.
+There has been a good deal of attention given to President Trump's filling of high-level positions within the executive branch.  Many high-level positions have been [left unfilled](https://www.washingtonpost.com/graphics/politics/trump-administration-appointee-tracker/database/?noredirect=on&utm_term=.63487772ed79) for lengthy periods.  Many nominees have been drawn from outside the pool of what have historically been considered [qualified](https://www.nbcnews.com/politics/white-house/heather-nauert-joins-long-list-questionably-qualified-trump-nominees-n945406) candidates. And, there has been strong and consistent [opposition](https://thehill.com/homenews/senate/452822-trump-nominees-meet-fiercest-opposition-from-warren-sanders-gillibrand) among Democratic senators to President Trump's nominees.  Here we place Democratic senators support for President Trump's executive branch nominees in recent historical context by comparing support for his nominees to support for other president's nominees since 1989.
 
 We find that the average level of support among Democratic senators for President Trump's nominees has been lower than support among opposition-party senators for any other recent president.
 Similarly, the fraction of President Trump's nominees that have received a majority of Democratic senators votes is the lowest among opposition parties' senators for a president's nominees since 1989  though Republican senators' support for President Obama's nominees was nearly as low during the first two years of President Obama's second term in office.
 
-Finally, looking at the support for presidential nominees among invidual senators, we find that Senators Kirsten Gillibrand, Bernie Sanders[^2], Elizabeth Warren, Cory Booker, Kamala Harris, Edward Markey, and Jeff Merkley have only supported between 7 to 18 percent of Trump appointees.   No other opposition party senators have supported fewer than 25 percent of any other president's nominees since 1989.
+Finally, looking at the support for presidential nominees among individual senators, we find that Senators Kirsten Gillibrand, Bernie Sanders[^2], Elizabeth Warren, Cory Booker, Kamala Harris, Edward Markey, and Jeff Merkley have only supported between 7 to 18 percent of Trump appointees.   No other opposition party senators have supported fewer than 25 percent of any other president's nominees since 1989.
 
 ## Analysis
 
@@ -127,7 +127,7 @@ ggplot(overall_party_support_long, aes(x=congress, y=100*support,
 
 ### Fraction of president's nominees receiving majority support from each party's caucus
 
-The figure below shows the fraction of each president's nominees in each congress that were supported by a majority of the president's co-partisans and opposition-party senators.  Note that only President Clinton had any nominees who were not supported by a majority of his co-partisan senators.  The fraction of nominees who have received majority support from the opposition-party's senators has varied substainly since 1989 reaching a low as 40 percent in the 115th Congress. 
+The figure below shows the fraction of each president's nominees in each congress that were supported by a majority of the president's co-partisans and opposition-party senators.  Note that only President Clinton had any nominees who were not supported by a majority of his co-partisan senators.  The fraction of nominees who have received majority support from the opposition-party's senators has varied substantially since 1989 reaching a low as 40 percent in the 115th Congress. 
 
 ```{r Calculate fraction of nominees supported, include=FALSE}
 party_supported <- dat %>%
@@ -167,7 +167,7 @@ ggplot(party_supported_long, aes(x=congress, y=100*supported,
   add_pres_boxes() +
   geom_point(show.legend = FALSE) +
   geom_line(size=0.15, color="grey")  +
-  ylab("Percent of nomminees supported") + xlab("Congress") +
+  ylab("Percent of nominees supported") + xlab("Congress") +
   scale_x_continuous(breaks=seq(101, 116, 2), limits=c(100.5,118.35)) +
   scale_y_continuous(breaks=seq(30, 100, 10), limits=c(25,112)) +
   scale_color_manual(values=c("R"="red","D"="blue")) +

@@ -1,20 +1,18 @@
 ---
 title: "Party Unity Scores"
 author: "Jeff Lewis"
-original_date: "2018-07-09"
+original_date: "2023-10-24"
 date: "`r format(Sys.time(), '%B %d, %Y')`" # Do not modify this
 output: html_document
 update_delta: 31
 description: Provides updated versions of the classic Voteview calculations of party unity scores. Figures and the underlying data are available for download. 
 tags:
-  - blog # Valid tags are: blog, help, data. You may use multiple tags for a post
   - data
 ---
 
 ```{r echo=FALSE, message=FALSE, error=FALSE}
 # We use pacman to load and install dependencies.
 library(pacman)
-# Please list your article's dependencies here, comma separated:
 p_load(tidyverse, ggplot2, ggrepel)
 ```
 
@@ -166,7 +164,7 @@ Overall, the two sets of scores line up very closely. The orange line for the ne
 
 Poole provided data on the rate at which each member voted with their party on party unity votes.  We will reproduce and continue those data here.
 
-We limit the votes to just those that are party unity votes as determined above. We filter out the voters from prior to the 35th Congress as well as all of the absentions and missed votes.For every congress, chamber, roll call and party, we determine the modal vote.  We then count the number of times that each member voted with the modal member of their party across party unity votes.   
+We limit the votes to just those that are party unity votes as determined above. We filter out the voters from prior to the 35th Congress as well as all of the abstentions and missed votes.For every congress, chamber, roll call and party, we determine the modal vote.  We then count the number of times that each member voted with the modal member of their party across party unity votes.   
 
 
 ```{r}
@@ -241,5 +239,4 @@ ggplot(tg, aes(x=party_unity_score.x,
 ```
 
 Most of the scores are very similar across the two datasets.  
-
 

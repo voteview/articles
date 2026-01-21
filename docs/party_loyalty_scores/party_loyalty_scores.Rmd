@@ -1,4 +1,3 @@
-
 ---
 title: "Party Loyalty Scores"
 author: "Jeff Lewis"
@@ -8,7 +7,6 @@ output: html_document
 update_delta: 31
 description: Provides updated versions of Voteview calculations of party loyalty scores. Figures and the underlying data are available for download. 
 tags:
-  - blog # Valid tags are: blog, help, data. You may use multiple tags for a post
   - data
 ---
 
@@ -25,7 +23,7 @@ library(tidyverse)
 
 ## Overview
 
-Here we construct simple Party Loyality Scores for members of the House and Senate.   These data provide in tabular form the rates of voting with their party majority for each member. Members in parties with fewer then 10 members are dropped. 
+Here we construct simple Party Loyalty Scores for members of the House and Senate.   These data provide in tabular form the rates of voting with their party majority for each member. Members in parties with fewer than 10 members are dropped. 
 
 You can download the loyalty scores in csv format [here](party_loyalty_scores.csv).
 
