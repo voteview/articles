@@ -65,14 +65,14 @@ Here is the `R` code that transforms the member-year NOMINATE data into the cham
  
 ```{r}
 south <- c(40:49,51,53)
-polar_dat <- nom_dat %>% 
-    filter(congress>45 & 
-           chamber != "President") %>%
-    mutate( 
+polar_dat <- nom_dat |>
+    filter(congress>45 &
+           chamber != "President") |>
+    mutate(
       year = 2*(congress-1) + 1789,
-    ) %>%
-    group_by(chamber,congress,year) %>% 
+    ) |>
     summarize(
+      .by = c(chamber, congress, year),
       party.mean.diff.d1 = mean(nominate_dim1[party_code==200],na.rm=T) - 
                            mean(nominate_dim1[party_code==100],na.rm=T),
       prop.moderate.d1 = mean(abs(nominate_dim1)<0.25,na.rm=T),
@@ -111,7 +111,7 @@ polar_dat <- nom_dat %>%
 Here are the first few lines of the resulting dataset:
 ```{r}
 head(polar_dat)
-write_csv(polar_dat,path="voteview_polarization_data.csv")
+write_csv(polar_dat, file="voteview_polarization_data.csv")
 ```
 You can download this dataset as a csv [here](voteview_polarization_data.csv).
 
@@ -120,27 +120,26 @@ You can download this dataset as a csv [here](voteview_polarization_data.csv).
 
 Here are up to date versions of the famous party means over time plots for each chamber:
 ```{r echo=FALSE}
-polar_dat_long <- polar_dat %>% gather(score,value,-chamber,-year,-congress)
+polar_dat_long <- polar_dat |> pivot_longer(cols = -c(chamber, year, congress), names_to = "score", values_to = "value")
 labels <- c("dem.mean.d1"="DEM",
             "rep.mean.d1"="REP",
             "north.dem.mean.d1"="N. DEM",
             "south.dem.mean.d1"="S. DEM")
 
 polarized_plot <- function(chamb) {
-  pdatl <- polar_dat_long %>% 
+  pdatl <- polar_dat_long |>
                 filter(chamber==chamb,
                        score %in% c("dem.mean.d1","rep.mean.d1",
-                                    "north.dem.mean.d1","south.dem.mean.d1")) %>%
-                mutate(party=labels[score]) %>%
-                ungroup()
-  
+                                    "north.dem.mean.d1","south.dem.mean.d1")) |>
+                mutate(party=labels[score])
+
   gg <- ggplot(data=pdatl,
                aes(x=year,y=value,group=party,col=party)) +
-               scale_x_continuous(expand = c(0.15, 0), 
+               scale_x_continuous(expand = c(0.15, 0),
                                  breaks=seq(1880, max(pdatl$year), by=8)) +
-               geom_line() + geom_point(size=0.7) + 
-               xlab("Year") + ylab("Liberal-Conservative") + 
-               geom_text_repel(data=pdatl %>%
+               geom_line() + geom_point(size=0.7) +
+               xlab("Year") + ylab("Liberal-Conservative") +
+               geom_text_repel(data=pdatl |>
                     filter(year == min(year)),
                   aes(label = party, color = party),
                   size = 3,
@@ -187,14 +186,13 @@ You can download this graphic as a [png](voteview_senate_party_means.png) or [pd
 
 ## Liberal-conservative partisan polarization by chamber
 ```{r echo=FALSE}
-gg <- ggplot(polar_dat_long %>% 
+gg <- ggplot(polar_dat_long |>
               filter(score == "party.mean.diff.d1"),
               aes(x=year,y=value,group=chamber,col=chamber)) +
               scale_x_continuous(expand = c(0.10, 0), breaks=seq(1880,max(polar_dat_long$year),by=8)) +
-              geom_line() + geom_point(size=0.7) + 
-              xlab("Year") + ylab("Distance between party means") + 
-              geom_text_repel(data=polar_dat_long %>%
-                    ungroup() %>%
+              geom_line() + geom_point(size=0.7) +
+              xlab("Year") + ylab("Distance between party means") +
+              geom_text_repel(data=polar_dat_long |>
                     filter(year == min(year) & score=="party.mean.diff.d1"),
                   aes(label = chamber, color = chamber),
                   size = 3,

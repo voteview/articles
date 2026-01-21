@@ -74,25 +74,25 @@ pres_score <- function() {
   # Load vote and description data for the given congress
   vote_dat <-
     read_csv("https://voteview.com/static/data/out/votes/HSall_votes.csv",
-             col_types = cols()) %>%
-    mutate(vote =  map_cast_codes[cast_code+1]) %>%
+             col_types = cols()) |>
+    mutate(vote =  map_cast_codes[cast_code+1]) |>
     select(-prob,-cast_code)
-  
+
   desc_dat <-
     read_csv(
       "https://voteview.com/static/data/out/rollcalls/HSall_rollcalls.csv",
       guess_max = 1e6,
       col_types = cols()
-    ) %>%
-    select(date, rollnumber, congress, chamber) %>%
+    ) |>
+    select(date, rollnumber, congress, chamber) |>
     mutate(year = lubridate::year(as.Date(date)))
-  
+
   members_dat <-
     read_csv(
       "https://voteview.com/static/data/out/members/HSall_members.csv",
       col_types = cols(),
       guess_max = 1e6
-    ) %>%
+    ) |>
     select(congress,
            chamber,
            icpsr,
@@ -100,26 +100,19 @@ pres_score <- function() {
            district_code,
            bioname,
            party_code)
-  
-  dat <- vote_dat %>%
-    left_join(desc_dat, by = c("rollnumber", "chamber", "congress")) %>%
-    left_join(members_dat %>% select(-chamber), by = c("icpsr", "congress"))
-  
-  pres_votes <- dat %>%
-    filter(state_abbrev == "USA") %>%
-    rename("pres_vote" = "vote") %>%
+
+  dat <- vote_dat |>
+    left_join(desc_dat, by = c("rollnumber", "chamber", "congress")) |>
+    left_join(members_dat |> select(-chamber), by = c("icpsr", "congress"))
+
+  pres_votes <- dat |>
+    filter(state_abbrev == "USA") |>
+    rename("pres_vote" = "vote") |>
     select(congress, chamber, rollnumber, pres_vote)
-  
-  score <- dat %>%
-    filter(state_abbrev != "USA") %>%
-    left_join(pres_votes, by = c("congress", "chamber", "rollnumber")) %>%
-    group_by(congress,
-             chamber,
-             year,
-             icpsr,
-             bioname,
-             state_abbrev,
-             district_code) %>%
+
+  score <- dat |>
+    filter(state_abbrev != "USA") |>
+    left_join(pres_votes, by = c("congress", "chamber", "rollnumber")) |>
     summarize(
       pres_matches = sum(vote == pres_vote, na.rm = T),
       pres_votes = sum(!is.na(pres_vote)),
@@ -130,7 +123,8 @@ pres_score <- function() {
                      pres_matches / pres_votes, NA),
         1
       ),
-      .groups = "drop"
+      .groups = "drop",
+      .by = c(congress, chamber, year, icpsr, bioname, state_abbrev, district_code)
     )
 }
 
@@ -140,7 +134,7 @@ support_scores <- pres_score()
 We then calculate the scores across all Congresses and chambers, starting with the the House:
 
 ```{r warning=FALSE, message=FALSE}
-write_csv(support_scores %>%
+write_csv(support_scores |>
             filter(chamber == "House"),
           file = "house_presidential_support.csv")
 ```
@@ -149,7 +143,7 @@ and then the Senate:
 
 ```{r warning=FALSE, message=FALSE}
 write_csv(
-  support_scores %>%
+  support_scores |>
     filter(chamber == "Senate"),
   file = "senate_presidential_support.csv"
 )
@@ -161,25 +155,24 @@ Here we calculate the average approval scores by year.  One thing to note is tha
 
 Here we calculate the summary for the Senate:
 ```{r message=F}
-summary_scores <- support_scores %>%
-  filter(2 * pres_there_for >= pres_votes) %>%
-  group_by(chamber, icpsr, congress, year) %>%
+summary_scores <- support_scores |>
+  filter(2 * pres_there_for >= pres_votes) |>
   summarize(
     pres_matches = sum(pres_matches),
     pres_votes = mean(pres_votes),
     pres_there_for = sum(pres_there_for),
-    .groups = "drop"
-  ) %>%
-  group_by(chamber, year) %>%
+    .groups = "drop",
+    .by = c(chamber, icpsr, congress, year)
+  ) |>
   summarize(
     pres_matches = mean(pres_matches),
     pres_votes = mean(pres_votes),
     pres_there_for = mean(pres_there_for),
-    .groups = "drop"
-  ) %>%
-  ungroup()  %>%
-  mutate(score = round(100 * pres_matches / pres_votes, 1)) %>%
-  select(chamber, year, score) %>%
+    .groups = "drop",
+    .by = c(chamber, year)
+  ) |>
+  mutate(score = round(100 * pres_matches / pres_votes, 1)) |>
+  select(chamber, year, score) |>
   filter(!is.nan(score))
 
 write_csv(summary_scores,
@@ -193,8 +186,8 @@ We begin by loading data from Edwards (1985), Table 2 as well as the aggregate s
 ```{r message=FALSE}
 edwards <-
   read_csv("edwards_1985_support_scores.csv", col_types = cols())
-agg_support_house <- summary_scores %>%
-  filter(chamber == "House") %>%
+agg_support_house <- summary_scores |>
+  filter(chamber == "House") |>
   left_join(edwards)
 ```
 
@@ -234,7 +227,7 @@ Across the 31 years for which Edwards reports scores, there are only three years
 The line plot below show the average level of presidential support in the House over the entire history of the chamber.  Edwards' scores are overlayed in red for comparison in the period for which he reports them. As seen in the previous plot, the only major discrepancy between the two series occurs in 1965.
 
 ```{r echo=F}
-gg <- ggplot(agg_support_house %>% filter(!is.na(score)),
+gg <- ggplot(agg_support_house |> filter(!is.na(score)),
              aes(x = year, y = score)) +
   geom_line(color = '#3366AA') +
   geom_line(aes(y = overall), color = "red", na.rm = T) +
@@ -254,7 +247,7 @@ Finally, we plot the presidential support scores for all House members and all S
 Prior to 1950, the number of votes upon which the scores are based are relatively small and the number of distinct scores is small with large numbers of members generally piling up at each possible value.
 
 ```{r echo=F}
-gg <- ggplot(support_scores %>% filter(chamber == "House"),
+gg <- ggplot(support_scores |> filter(chamber == "House"),
              aes(x = year, y = score)) +
   geom_point(
     size = 0.2,
@@ -281,7 +274,7 @@ gg
 Note that at the moment the database does not include the presidents' positions on roll calls taken in the Senate prior to 1955.
 
 ```{r echo=F,message=F}
-gg <- ggplot(support_scores %>% filter(chamber == "Senate"),
+gg <- ggplot(support_scores |> filter(chamber == "Senate"),
              aes(x = year, y = score)) +
   geom_point(
     size = 0.2,
@@ -292,7 +285,7 @@ gg <- ggplot(support_scores %>% filter(chamber == "Senate"),
                                  1)
   ) +
   geom_line(
-    data = subset(summary_scores %>% filter(chamber == "Senate"),!is.na(score)),
+    data = subset(summary_scores |> filter(chamber == "Senate"),!is.na(score)),
     aes(x = year, y = score),
     col = "#3366AA",
     na.rm = T

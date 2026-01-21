@@ -32,9 +32,9 @@ Here I calculate the lifetime rate at which Joseph Biden sided with the pluralit
 I begin by reading in the necessary data.
 
 ```{r message=F, warning=F}
-rollcalls <- read_csv("https://voteview.com/static/data/out/rollcalls/Sall_rollcalls.csv") %>% filter(congress>60)
-members <- read_csv("https://voteview.com/static/data/out/members/Sall_members.csv") %>% filter(congress>60)
-votes <- read_csv("https://voteview.com/static/data/out/votes/Sall_votes.csv") %>% filter(congress>60)
+rollcalls <- read_csv("https://voteview.com/static/data/out/rollcalls/Sall_rollcalls.csv") |> filter(congress>60)
+members <- read_csv("https://voteview.com/static/data/out/members/Sall_members.csv") |> filter(congress>60)
+votes <- read_csv("https://voteview.com/static/data/out/votes/Sall_votes.csv") |> filter(congress>60)
 ```
 
 ## Calculating party loyalty
@@ -43,51 +43,50 @@ I then calculate the rate at which all Democratic senators vote with their party
 
 ```{r}
 map_vote <- c("y","y","y", "n", "n", "n", "nv", "nv", "nv")
-all <- votes %>% 
-          left_join(members, by = c("congress", "chamber", "icpsr")) %>%
-          left_join(rollcalls, by=c("congress", "chamber", "rollnumber")) %>%
-          filter(party_code == 100) %>%
-          group_by(congress, rollnumber) %>%
-          mutate(cast_code = map_vote[as.integer(cast_code)], 
-                 party_yea = sum(cast_code=='y'), 
+all <- votes |>
+          left_join(members, by = c("congress", "chamber", "icpsr")) |>
+          left_join(rollcalls, by=c("congress", "chamber", "rollnumber")) |>
+          filter(party_code == 100) |>
+          mutate(cast_code = map_vote[as.integer(cast_code)],
+                 party_yea = sum(cast_code=='y'),
                  party_no = sum(cast_code=='n'),
                  party_cast_code = ifelse(party_yea > party_no, 'y', 'n'),
-                 with_party = (party_cast_code == cast_code)) %>%
-          filter(party_yea != party_no) %>%
-          group_by(icpsr) %>%
+                 with_party = (party_cast_code == cast_code),
+                 .by = c(congress, rollnumber)) |>
+          filter(party_yea != party_no) |>
           summarize(name = bioname[1],
                   state_abbrev = state_abbrev[1],
                   party_loyalty = sum(with_party)/sum(cast_code != 'nv'),
                   votes_cast = sum(cast_code != 'nv'),
                   min_congress = min(congress),
-                  max_congress = max(congress)) %>%
-          filter( max_congress >= 93, min_congress <= 111) %>%
-          mutate(rank = rank(-party_loyalty)) %>%
-          ungroup() %>%
-          select(rank, everything(), -icpsr) %>%
+                  max_congress = max(congress),
+                  .by = icpsr) |>
+          filter( max_congress >= 93, min_congress <= 111) |>
+          mutate(rank = rank(-party_loyalty)) |>
+          select(rank, everything(), -icpsr) |>
           arrange(desc(party_loyalty))
 
-write_csv(all, path="biden_party_loyalty.csv")
+write_csv(all, file="biden_party_loyalty.csv")
 ```
 
 ## Tabulating the results
 
-Pulling out Mr. Biden, 
+Pulling out Mr. Biden,
 ```{r}
-biden <- all %>% filter(str_detect(name, "BIDEN"))
+biden <- all |> filter(str_detect(name, "BIDEN"))
 ```
 we find that he voted with the Democrats `r sprintf("%3.1f", 100*biden$party_loyalty)` percent of the time making him the `r ordinal(biden$rank)` most loyal of the `r NROW(all)` Democratic senators with whom he served. 
 
 Here is a complete table:
 
 ```{r}
-all %>%
-  knitr::kable(col.names=c("Rank", "Member", "State", "Party loyalty", "Votes Cast", "First", "Last")) %>%
-  row_spec(c(biden$rank), 
-           bold = T, background = "#f6fcba") %>%
+all |>
+  knitr::kable(col.names=c("Rank", "Member", "State", "Party loyalty", "Votes Cast", "First", "Last")) |>
+  row_spec(c(biden$rank),
+           bold = T, background = "#f6fcba") |>
   kableExtra::kable_styling(bootstrap_options = c("striped", "hover"),
-                            font_size = 10, 
-                            full_width = FALSE) %>%
+                            font_size = 10,
+                            full_width = FALSE) |>
   kableExtra::add_header_above(c(" "=5, "Congresses Served"=2))
 ```
 

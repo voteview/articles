@@ -70,20 +70,15 @@ party_loyalty_score <- vote |>
                    "icpsr")) |>
   mutate(v = case_when(cast_code %in% 1:3 ~ 1, # add in paired and announced yeas
                        cast_code %in% 4:6 ~ 0, # add in paired and announced noes
-                       TRUE ~ NA)) |>
-  group_by(chamber, congress, rollnumber, party_code) |>
-  mutate(party_majority = majority(v)) |>
-  group_by(congress, chamber, icpsr, bioname, 
-           state_abbrev, district_code, party_code) |>
+                       .default = NA)) |>
+  mutate(party_majority = majority(v), .by = c(chamber, congress, rollnumber, party_code)) |>
   summarize(party_loyalty = 100*mean(v == party_majority, na.rm=TRUE),
             no_of_votes = sum(!is.na(v)),
-           .groups = "drop")  |> 
-  group_by(congress, chamber) |>
-  mutate(floor_median_party_loyalty = median(party_loyalty, na.rm = TRUE)) |>
-  group_by(congress, chamber, party_code) |>
+           .groups = "drop",
+           .by = c(congress, chamber, icpsr, bioname, state_abbrev, district_code, party_code)) |>
+  mutate(floor_median_party_loyalty = median(party_loyalty, na.rm = TRUE), .by = c(congress, chamber)) |>
   mutate(caucus_median_party_loyalty = median(party_loyalty, na.rm = TRUE),
-         n_party = n()) |>
-  ungroup() |>
+         n_party = n(), .by = c(congress, chamber, party_code)) |>
   filter(n_party > 9)
 ```  
 
